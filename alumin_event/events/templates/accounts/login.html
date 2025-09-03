@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Alumni Event Management{% endblock %}
+
+{% block content %}
+<div class="section" style="max-width: 500px; margin: 4rem auto;">
+    {# --- MESSAGES FRAMEWORK --- #}
+    {% if messages %}
+    <div class="messages" style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {# --- END MESSAGES --- #}
+
+    <h2>🔐 Login</h2>
+    
+    <form method="post" style="margin-top: 2rem;">
+        {% csrf_token %}
+            
+        {% for field in form %}
+        <div style="margin-bottom: 1.5rem;">
+            <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057;">
+                {{ field.label }}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+                <div style="color: #dc3545; font-size: 0.9rem; margin-top: 0.25rem;">
+                    {{ field.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1rem;">
+            Login
+        </button>
+        <br>
+        <a href="{% url 'event_overview' %}" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1rem;">
+            <i class="bi bi-arrow-left-circle me-2"></i>
+            Back
+        </a>
+    </form>
+    
+    <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e9ecef;">
+        <p style="color: #6c757d; margin-bottom: 1rem;">Don't have an account?</p>
+        <a href="{% url 'signup' %}" class="btn btn-outline" style="border-color: #667eea; color: #667eea;">
+            Sign Up Now
+        </a>
+    </div>
+    
+</div>
+
+<style>
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    input[type="text"]:focus, input[type="password"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    .btn-outline:hover {
+        background-color: #667eea;
+        color: white;
+    }
+</style>
+{% endblock %}

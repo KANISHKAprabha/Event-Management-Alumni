@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Agenda Item{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm">
+    <h1 class="mb-3 text-danger">⚠️ Delete Agenda Item</h1>
+    <p class="text-muted">Are you sure you want to delete this agenda item?</p>
+
+    <div class="mb-3">
+        <h3>{{ agenda_item.title }}</h3>
+        <p><strong>Event:</strong> {{ agenda_item.event.name }}</p>
+        <p><strong>Start:</strong> {{ agenda_item.start_time|date:"F j, Y g:i A" }}</p>
+        <p><strong>End:</strong> {{ agenda_item.end_time|date:"F j, Y g:i A" }}</p>
+        {% if agenda_item.speaker %}
+        <p><strong>Speaker:</strong> {{ agenda_item.speaker }}</p>
+        {% endif %}
+    </div>
+
+    <form id="delete-form" method="post">
+        {% csrf_token %}
+        <button type="submit" id="delete-btn" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'event_detail' agenda_item.event.pk %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div>
+
+<script>
+    document.getElementById("delete-form").addEventListener("submit", function() {
+        let btn = document.getElementById("delete-btn");
+        btn.disabled = true;
+        btn.innerText = "Deleting...";
+    });
+</script>
+{% endblock %}

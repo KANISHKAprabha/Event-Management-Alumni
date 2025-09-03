@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create New Form{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card p-4 shadow-sm mb-4">
+                <h1 class="mb-3">📝 Create a New Form</h1>
+                <p class="text-muted mb-4">Fill in the form details below to create a dynamic form for an event.</p>
+
+                <form id="create-form" method="post">
+                    {% csrf_token %}
+
+                    <!-- Form fields -->
+                    <div class="mb-3">
+                        {{ form.as_p }}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-btn" class="btn btn-primary">
+                        Save Form
+                    </button>
+                    <!-- Back Button -->
+                    <a href="{% url 'event_list' %}" class="btn btn-outline-secondary ms-2">← Back to Forms</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prevent multiple submissions -->
+<script>
+    document.getElementById("create-form").addEventListener("submit", function() {
+        let btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.innerText = "Submitting...";
+    });
+</script>
+{% endblock %}
+

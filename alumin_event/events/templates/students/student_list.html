@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Students{% endblock %}
+{% block content %}
+
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Students</h1>
+        <a href="{% url 'student_add' %}" class="btn btn-success">Add Student</a>
+    </div>
+
+    <form method="GET" action="{% url 'student_list' %}" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Search by first or last name..." value="{{ search_query }}">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+    </form>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Batch</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.roll_no }}</td>
+                <td>{{ student.f_name }} {{ student.lname }}</td>
+                <td>{{ student.department }}</td>
+                <td>{{ student.batch }}</td>
+                <td>{{ student.email_id }}</td>
+                <td>
+<a href="{% url 'student_edit' student.pk %}" class="btn btn-primary btn-sm mb-2">Edit</a>
+
+<a href="{% url 'student_delete' student.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    {% if search_query %}
+                        No students found matching your search for "{{ search_query }}".
+                    {% else %}
+                        No students found.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+
+            {# PREVIOUS BUTTON #}
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ search_query }}&page={{ page_obj.previous_page_number }}">&laquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+
+            {# NUMBERED PAGES #}
+            {% for page_num in paginator.page_range %}
+                {% if page_obj.number == page_num %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?q={{ search_query }}&page={{ page_num }}">{{ page_num }}</a></li>
+                {% elif page_num == 1 %}
+                    <li class="page-item"><a class="page-link" href="?q={{ search_query }}&page=1">1</a></li>
+                    {% if page_obj.number > 3 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% elif page_num == paginator.num_pages %}
+                    {% if page_obj.number < paginator.num_pages|add:'-2' %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    <li class="page-item"><a class="page-link" href="?q={{ search_query }}&page={{ page_num }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {# NEXT BUTTON #}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ search_query }}&page={{ page_obj.next_page_number }}">&raquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% url 'student_list' as list_url %}
+<button type="button" class="btn btn-primary w-100 mb-2" onclick="window.location.href='{{ list_url }}'">
+    Back
+</button>
+
+{% url 'event_list_admin' as list_url_events %}
+<button type="button" class="btn btn-primary w-100" onclick="window.location.href='{{ list_url_events }}'">
+    Back To Event Submissions
+</button>
+{% endblock %}

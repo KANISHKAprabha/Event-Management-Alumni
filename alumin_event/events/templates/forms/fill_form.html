@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fill Form - {{ form_def.name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm">
+    <h1 class="mb-3">{{ form_def.name }}</h1>
+    <p class="text-muted">{{ form_def.description }}</p>
+
+    <form id="dynamic-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Render form fields -->
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submit-btn" class="btn btn-primary">
+            Submit
+        </button>
+        <button type="button" id="back-btn" class="btn btn-secondary" onclick="window.history.back();">
+            BACK
+        </button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("dynamic-form").addEventListener("submit", function() {
+        let btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.innerText = "Submitting..."; // Prevent multiple clicks
+    });
+</script>
+{% endblock %}

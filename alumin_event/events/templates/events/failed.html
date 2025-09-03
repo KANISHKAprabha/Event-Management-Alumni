@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow-lg border-0 rounded-4 p-4 text-center" style="max-width: 500px; width: 100%;">
+        <div class="card-body">
+            <!-- Failed Icon -->
+            <div class="mb-4">
+                <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+            </div>
+
+            <!-- Failed Message -->
+            <h2 class="fw-bold text-danger">Transaction Failed</h2>
+            <p class="text-muted mb-4">Oops! Something went wrong with your payment. Please try again.</p>
+
+            <!-- Retry & Back Buttons -->
+            <div class="d-grid gap-2">
+                <a href="{% url 'event_overview' %}" class="btn btn-secondary rounded-pill">
+                    <i class="bi bi-arrow-left-circle me-2"></i> Back to Events
+                </a>
+                <a href="{% url 'subscription_payment' %}" class="btn btn-danger rounded-pill">
+                    <i class="bi bi-arrow-repeat me-2"></i> Retry Payment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

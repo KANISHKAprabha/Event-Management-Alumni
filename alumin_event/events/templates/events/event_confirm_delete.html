@@ -1,0 +1,15 @@
+{% load static %}
+
+<head>
+    <title>Delete Event</title>
+</head>
+<body>
+    <h1>Are you sure you want to delete "{{ event.name }}"?</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, delete</button>
+        <a href="{% url 'event_list' %}">Cancel</a>
+    </form>
+</body>
+

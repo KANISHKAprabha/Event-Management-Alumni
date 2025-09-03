@@ -1,0 +1,13 @@
+{% load static %}
+<head><title>Submissions</title></head>
+<body>
+<h1>Submissions for {{ form_def.name }}</h1>
+<ul>
+{% for submission in submissions %}
+    <li>{{ submission.created_at }} → {{ submission.data }}</li>
+{% empty %}
+    <li>No submissions yet.</li>
+{% endfor %}
+</ul>
+</body>
+

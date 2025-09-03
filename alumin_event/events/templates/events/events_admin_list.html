@@ -1,0 +1,26 @@
+{# templates/events/event_list.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Events</h2>
+
+    <div class="list-group">
+        {% for event in events %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ event.name }}</span>
+                <a href="{% url 'event_submissions' event.id %}" class="btn btn-primary btn-sm">View</a>
+                 <a href="{% url 'event_payments' event.id %}" class="btn btn-success btn-sm">View Payments</a>
+            </div>
+        {% empty %}
+            <p class="text-muted">No events available.</p>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<br>
+<a hreflang="en" href="{% url 'event_list' %}" 
+   class="btn btn-secondary btn-lg w-100 py-2 fs-4">
+   ⬅ Back
+</a>
+{% endblock %}

@@ -1,0 +1,95 @@
+{# templates/events/event_submissions.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ event.name }} - Submissions</h2>
+    {{request.user}}
+    {% if user_data %}
+  
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>User</th>
+                        <th>Submission Data</th>
+                        <th>Files</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in user_data %}
+                  
+                        {% for sub in item.submissions %}
+                        <tr>
+                            <td>{{ item.user.username }}</td>
+                            <td>
+                                {% for key, value in sub.data.items %}
+                                 {% if key != 'csrfmiddlewaretoken' %}
+                                
+                                    <p><strong>{{ key }}:</strong> {{ value }}</p>
+                                {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for file in sub.files %}
+                                    <div class="mb-2">
+                                        <!-- Preview Button -->
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#previewModal{{ file.id }}">
+                                            Preview {{ file.field.label }}
+                                        </button>
+
+                                        <!-- Download Button -->
+                                        <a href="{{ file.file.url }}" download class="btn btn-sm btn-success">
+                                            Download
+                                        </a>
+                                    </div>
+
+                                    <!-- Modal for Preview -->
+                                    <div class="modal fade" id="previewModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+                                      <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+                                          <div class="modal-header">
+                                            <h5 class="modal-title">Preview - {{ file.field.label }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                          </div>
+                                          <div class="modal-body text-center">
+    {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-5:" == ".jpeg" or file.file.url|lower|slice:"-4:" == ".png" %}
+        <img src="{{ file.file.url }}" class="img-fluid rounded">
+    {% elif file.file.url|lower|slice:"-4:" == ".pdf" %}
+        <embed src="{{ file.file.url }}" type="application/pdf" width="100%" height="600px"/>
+    {% else %}
+        <p class="text-muted">Preview not available for this file type. Please download.</p>
+    {% endif %}
+</div>
+
+                                        </div>
+                                      </div>
+                                    </div>
+                                {% empty %}
+                                    <span class="text-muted">No Files</span>
+                                {% endfor %}
+                            </td>
+                            <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No submissions yet</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No registrations found for this event.
+        </div>
+    {% endif %}
+</div>
+<a hreflang="en" href="{% url 'event_list_admin' %}" 
+   class="btn btn-secondary btn-lg w-100 py-3 fs-4">
+   ⬅ Back
+</a>
+
+{% endblock %}

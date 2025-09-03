@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.name }} - Event Details{% endblock %}
+
+{% block content %}
+
+<!-- Event Header -->
+<div class="card p-4 shadow-sm mb-4">
+  <h1 class="mb-2">{{ event.name }}</h1>
+  <p class="text-muted">
+    📅 {{ event.date|date:"F j, Y" }} | 🕒 {{ event.time|time:"g:i A" }} | 🎯 {{ event.location_type }}
+  </p>
+{% if request.user.is_authenticated and not request.user.is_staff %}
+  <div class="d-flex gap-2 mb-3">
+    <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary btn-sm">← Back to Overview</a>
+  </div>
+{% endif %}
+</div>
+
+<!-- Agenda Section -->
+<div class="card p-4 shadow-sm mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 text-primary mb-0">📅 Agenda</h2>
+    {% if user.is_superuser %}
+      <a href="{% url 'agenda_create' event.pk %}" class="btn btn-sm btn-primary">+ Add Agenda Item</a>
+    {% endif %}
+  </div>
+  
+  {% if agenda_items %}
+    <ul class="list-group">
+      {% for item in agenda_items %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ item.title }}</strong><br>
+          <small class="text-muted">{{ item.start_time|time:"g:i A" }} - {{ item.end_time|time:"g:i A" }}</small>
+        </div>
+        {% if user.is_superuser %}
+        <div class="d-flex gap-1">
+          <a href="{% url 'agenda_update' item.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+          <a href="{% url 'agenda_delete' item.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted fst-italic">No agenda items yet.</p>
+  {% endif %}
+</div>
+
+<!-- Beverages Section -->
+<div class="card p-4 shadow-sm mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 text-primary mb-0">🥤 Beverages</h2>
+    {% if user.is_superuser %}
+      <a href="{% url 'beverage_create' event.pk %}" class="btn btn-sm btn-primary">+ Add New Beverage</a>
+    {% endif %}
+  </div>
+
+  {% if event.beverages_list %}
+    <ul class="list-group">
+      {% for bev in event.beverages_list %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          {{ bev.name }} ({{ bev.quantity }}) {% if bev.notes %}- <em>{{ bev.notes }}</em>{% endif %}
+        </div>
+        {% if user.is_superuser %}
+        <div class="d-flex gap-1">
+          <a href="{% url 'beverage_update' bev.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+          <a href="{% url 'beverage_delete' bev.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted fst-italic">No beverages yet.</p>
+  {% endif %}
+</div>
+
+<!-- Dynamic Forms Section -->
+<div class="card p-4 shadow-sm mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 text-primary mb-0">📊 Forms</h2>
+    {% if user.is_superuser %}
+      <a href="{% url 'create_form' %}" class="btn btn-sm btn-primary">+ Create Form</a>
+    {% endif %}
+  </div>
+
+  {% if event.form_definitions.all %}
+    <ul class="list-group">
+      {% for form in event.form_definitions.all %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>{{ form.name }}</div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'fill_form' form.id %}" class="btn btn-sm btn-outline-primary">Submit</a>
+          {% if user.is_superuser %}
+          <a href="{% url 'update_form' form.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+          <a href="{% url 'delete_form' form.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted fst-italic">No forms available for this event.</p>
+  {% endif %}
+</div>
+
+<!-- Submissions Section -->
+{% if form_def and submissions %}
+<div class="card p-4 shadow-sm mb-4">
+  <h2 class="h5 text-primary mb-3">📨 Submissions for {{ form_def.name }}</h2>
+  {% if submissions %}
+    <ul class="list-group">
+      {% for submission in submissions %}
+      <li class="list-group-item">
+        <strong>{{ submission.created_at|date:"Y-m-d H:i" }}</strong> → {{ submission.data }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted fst-italic">No submissions yet.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

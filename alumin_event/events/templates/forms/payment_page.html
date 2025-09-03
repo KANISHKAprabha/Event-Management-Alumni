@@ -1,0 +1,56 @@
+{% load static %}
+<head>
+    <title>Payment</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card shadow-sm p-4">
+            <h1 class="mb-4">💳 Payment for {{ submission.form.name }}</h1>
+
+            <!-- Display form submission data in a table -->
+            <h4 class="mb-3">Your Submission</h4>
+            <table class="table table-bordered table-striped">
+                <tbody>
+                    {% for key, value in submission.data.items %}
+                     {% if key != 'csrfmiddlewaretoken' %}
+                        <tr>
+                            <th scope="row">{{ key|title }}</th>
+                            <td>
+                                {% if value|stringformat:"s"|slice:":7" == "uploads" %}
+                                    <!-- Handle file links -->
+                                    <a href="{{ MEDIA_URL }}{{ value }}" target="_blank">📂 View File</a>
+                                {% else %}
+                                    {{ value }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                     {% endif %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-muted">No data submitted.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Example: If you store a "payment role" field, show it clearly -->
+           
+
+            <!-- Amount Section -->
+             
+            <div class="alert alert-info mt-4 fs-5">
+                <strong>Amount to Pay:</strong> ₹{{ payment_amount |default:"0" }}
+            </div>
+
+            <!-- Payment Button -->
+            <form method="post" class="mt-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg w-100">Pay Now (Demo)</button>
+            </form>
+                                <a href="{% url 'event_overview'  %}" class="btn btn-outline-secondary ms-2">Event List </a>
+
+        </div>
+    </div>
+</body>
+

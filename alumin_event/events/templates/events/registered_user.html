@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Event Registration{% endblock %}
+
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-sm p-4" style="max-width: 600px; width: 100%;">
+
+        <!-- Success message -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h2 class="mb-4 text-center">{{ event.name }}</h2>
+
+        {% if student_exists %}
+            <p class="text-center text-success mb-4">
+                Your information was prefilled from your student profile. You can update it if needed.
+            </p>
+        {% endif %}
+
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            
+            <div class="col-12">
+                {{ form.f_name.label_tag }}
+                {{ form.f_name }}
+                {{ form.f_name.errors }}
+            </div>
+            <div class="col-12">
+                {{ form.lname.label_tag }}
+                {{ form.lname }}
+                {{ form.lname.errors }}
+            </div>
+
+            <div class="col-12">
+                {{ form.personal_email_id.label_tag }}
+                {{ form.personal_email_id }}
+                {{ form.personal_email_id.errors }}
+            </div>
+
+            <div class="col-12">
+                {{ form.position.label_tag }}
+                {{ form.position }}
+                {{ form.position.errors }}
+            </div>
+
+            <div class="col-12 text-center mt-3">
+                <button type="submit" class="btn btn-primary w-100">Register for Event</button>
+            </div>
+        </form>
+
+        <a href="{% url 'event_overview' %}" class="btn btn-link mt-3 w-100 text-center">
+            ← Back to Events
+        </a>
+    </div>
+</div>
+{% endblock %}

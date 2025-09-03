@@ -1,0 +1,11 @@
+{% load static %}
+<head><title>Payment</title></head>
+<body>
+<h1>Payment for {{ submission.form.name }}</h1>
+<p>Amount: ₹{{ amount }}</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Pay Now (Demo)</button>
+</form>
+</body>
+</html>

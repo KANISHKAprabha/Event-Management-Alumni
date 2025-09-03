@@ -1,0 +1,14 @@
+
+<body>
+  <p>Hi {{ user.get_full_name|default:user.username }},</p>
+  <p>Thank you for registering for <strong>{{ event.name }}</strong>.</p>
+  <ul>
+    <li><strong> Start Date and Time:</strong> {{ event.date }}</li>
+    <li><strong> End Date and Time:</strong> {{ event.event_end_date }}</li>
+    <li><strong>Location:</strong> {{ event.physical_address}}</li>
+    <li><strong>Link:</strong> {{ event.online_link}}</li>
+  </ul>
+  <p>See you there!</p>
+  <p>— The Events Team</p>
+</body>
+</html>

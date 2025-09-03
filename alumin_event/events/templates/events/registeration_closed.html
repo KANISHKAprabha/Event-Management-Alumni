@@ -1,0 +1,10 @@
+{% load static %}
+<head>
+    <title>Registration Closed</title>
+</head>
+<body>
+    <h1>Registration Closed for {{ event.name }}</h1>
+    <p>Sorry, the registration deadline has passed.</p>
+    <a href="{% url 'event_overview' %}">Back to Events</a>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% load static %}
+<head><title>Add Field</title></head>
+<body>
+<h1>Add Fields to {{ form_def.name }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ field_form.as_p }}
+    <button type="submit">Add Field</button>
+</form>
+
+<h2>Current Fields:</h2>
+<ul>
+{% for field in form_def.fields.all %}
+    <li>{{ field.label }} ({{ field.get_field_type_display }})</li>
+{% empty %}
+    <li>No fields yet.</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'fill_form' form_def.id %}">Preview Form</a>
+</body>
+</html>

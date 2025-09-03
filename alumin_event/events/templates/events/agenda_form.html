@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Agenda Item{% else %}Add Agenda Item{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm mb-4">
+    <h1 class="mb-2">
+        {% if form.instance.pk %}✏️ Edit Agenda Item{% else %}➕ Add Agenda Item{% endif %}
+    </h1>
+    <p class="text-muted mb-3">Event: <strong>{{ event.name }}</strong></p>
+
+    <form id="agenda-form" method="post">
+        {% csrf_token %}
+
+        <!-- Hide event field if present -->
+        {% if form.event %}
+            {{ form.event.as_hidden }}
+        {% endif %}
+
+        <!-- Form Fields -->
+        <div class="mb-3">
+            {{ form.title.label_tag }}<br>
+            {{ form.title }}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label_tag }}<br>
+            {{ form.description }}
+        </div>
+        <div class="mb-3">
+            {{ form.start_time.label_tag }}<br>
+            {{ form.start_time }}
+        </div>
+        <div class="mb-3">
+            {{ form.end_time.label_tag }}<br>
+            {{ form.end_time }}
+        </div>
+        <div class="mb-3">
+            {{ form.speaker.label_tag }}<br>
+            {{ form.speaker }}
+        </div>
+        <div class="mb-3">
+            {{ form.order.label_tag }}<br>
+            {{ form.order }}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submit-btn" class="btn btn-primary">
+            {% if form.instance.pk %}Update{% else %}Add{% endif %}
+        </button>
+            {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Render fields -->
+    
+
+        <!-- Back Button -->
+        <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline-secondary ms-2">← Back to Event Details</a>
+    </form>
+</div>
+
+<!-- Idempotent Submit -->
+<script>
+    document.getElementById("agenda-form").addEventListener("submit", function() {
+        let btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.innerText = "Submitting...";
+    });
+</script>
+{% endblock %}

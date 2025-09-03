@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2>Event Registration – Please Login or Sign Up</h2>
+    <p>You must be logged in to register for <strong>{{ event.title }}</strong>.</p>
+
+    <div style="display: flex; gap: 40px; margin-top: 20px;">
+        <!-- Login Form -->
+        <div style="flex: 1; border: 1px solid #ccc; padding: 20px; border-radius: 8px;">
+            <h3>Login</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ auth_form.as_p }}
+                <button type="submit" name="login">Login</button>
+            </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div style="flex: 1; border: 1px solid #ccc; padding: 20px; border-radius: 8px;">
+            <h3>Sign Up</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ signup_form.as_p }}
+                <button type="submit" name="signup">Sign Up</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

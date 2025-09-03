@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Environment/secrets
+.env
+.env.* 
+*.env
+
+# Static/Media (generated or large)
+staticfiles/
+static/
+media/
+tmp/
+.DS_Store
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+
+# Celery/Redis (optional logs/pids)
+celerybeat-schedule
+celerybeat.pid
+
+# Node (if any)
+node_modules/

@@ -1,0 +1,10 @@
+Hi {{ user.get_full_name|default:user.username }},
+
+Thank you for registering for {{ event.title }}.
+Date: {{ event.start_date }}
+Location: {{ event.location }}
+
+We look forward to seeing you!
+
+Regards,
+The Events Team
