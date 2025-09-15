@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -15,12 +18,21 @@
   
   <style>
     /* --- 1. General Styling & Typography --- */
-    body {
-      /* Changed font-family to Lato */
-      font-family: 'Lato', sans-serif;
-      padding-top: 80px; /* Offset for the fixed navbar */
-      background-color: #d1e3f0 !important; /* Retaining your specified color */
-    }
+   /* In your main <style> block in base.html */
+
+/* 1. Update the main body font */
+body {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400; /* Regular weight for body text */
+    color: #495057; /* A soft, dark grey for better readability */
+    /* ... other body styles ... */
+}
+
+/* 2. Add this new rule for headings to make them light and airy */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 300; /* Use the light weight for all headings */
+    color: #212529; /* A darker color for headings for contrast */
+}
 
     /* --- 2. Global Transitions for a smooth feel --- */
     .btn, .nav-link, .card, .social-links a, .form-control {
@@ -137,7 +149,7 @@
       <ul class="navbar-nav align-items-center">
         <li class="nav-item">
           <a class="nav-link text-dark" href="{% url 'event_overview' %}">
-            <i class="bi bi-calendar-event me-1"></i>Overview
+            <i class="bi bi-calendar-event me-1"></i>Home
           </a>
         </li>
         {% if user.is_authenticated %}
@@ -173,22 +185,58 @@
 
   </main>
 
-  <footer class="text-dark text-center py-4 mt-auto">
-    <p class="mb-3">© 2025 Alumni Event Management | Crafted with ❤️</p>
-    <div class="social-links">
-      <a href="https://facebook.com/yourpage" target="_blank" class="me-3">
-        <i class="fab fa-facebook-f"></i>
-      </a>
-      <a href="https://twitter.com/yourhandle" target="_blank" class="me-3">
-        <i class="fab fa-twitter"></i>
-      </a>
-      <a href="https://linkedin.com/in/yourprofile" target="_blank" class="me-3">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://instagram.com/yourhandle" target="_blank">
-        <i class="fab fa-instagram"></i>
-      </a>
-    </div>
+<footer class="bg-light text-center text-lg-start text-muted mt-auto pt-4">
+  <section class="">
+    <div class="container text-center text-md-start mt-5">
+      <div class="row mt-3">
+        
+        <div class="col-md-4 col-lg-4 col-xl-3 mx-auto mb-4">
+          <h6 class="text-uppercase fw-bold mb-4">
+            <i class="bi bi-gem me-3"></i>Alumni Events
+          </h6>
+          <p>
+            Connecting alumni from Kumaraguru Institutions. Join us for exclusive events and networking opportunities across the globe.
+          </p>
+        </div>
+        
+        <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
+          <h6 class="text-uppercase fw-bold mb-4">
+            Quick Links
+          </h6>
+          <p><a href="#!" class="text-reset">About Us</a></p>
+          <p><a href="#!" class="text-reset">Upcoming Events</a></p>
+          <p><a href="#!" class="text-reset">Gallery</a></p>
+          <p><a href="#!" class="text-reset">Privacy Policy</a></p>
+        </div>
+        
+        <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+          <h6 class="text-uppercase fw-bold mb-4">Contact</h6>
+          <p><i class="bi bi-geo-alt-fill me-3"></i>Coimbatore, TN 641049, India</p>
+          <p><i class="bi bi-envelope-fill me-3"></i>info@kctalumni.com</p>
+          <p><i class="bi bi-telephone-fill me-3"></i>+91 123 456 7890</p>
+          
+          <div class="mt-4">
+            <a href="https://facebook.com/yourpage" target="_blank" class="me-4 text-reset">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://twitter.com/yourhandle" target="_blank" class="me-4 text-reset">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://linkedin.com/in/yourprofile" target="_blank" class="me-4 text-reset">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://instagram.com/yourhandle" target="_blank" class="me-4 text-reset">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+        
+      </div>
+      </div>
+  </section>
+  <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.05);">
+    © 2025 Alumni Event Management | Crafted with ❤️
+  </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

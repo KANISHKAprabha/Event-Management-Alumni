@@ -409,15 +409,19 @@ def add_field(request, form_id):
 @login_required
 def fill_form(request, form_id):
   try:
+    print("entered_fill form")
     form_def = get_object_or_404(FormDefinition, id=form_id)
+    event_id = form_def.event_name.id
+    print(event_id,"line no 415")
     DynamicFormClass = generate_dynamic_form(form_def)
     existing_count = FormSubmission.objects.filter(
             form=form_def, submitted_by=request.user
         ).count()
     remaining_submissions = max(0, form_def.max_submissions_per_user - existing_count)
-    if remaining_submissions == 0:
-            messages.warning(request, "You have reached the submission limit for this form.")
-            return redirect("register_event", event_id=form_def.event_name.id)
+    print(remaining_submissions,"line noooooooooooooooooooooo")
+    
+    
+    
  
 
     if request.method == "POST":
@@ -485,8 +489,9 @@ def fill_form(request, form_id):
                     )
 
                 messages.success(request, "✅ Submitted successfully!")
-                return redirect("event_overview")
+                return redirect("register_event" ,event_id)
         else:
+            print("error")
             logger.debug("Form errors: %s", form.errors)
     else:
         form = DynamicFormClass()
@@ -494,9 +499,10 @@ def fill_form(request, form_id):
     return render(
         request,
         "forms/fill_form.html",
-        {"form_def": form_def, "form": form,"remaining_submissions": remaining_submissions}
+        {"form_def": form_def, "form": form,"remaining_submissions": remaining_submissions,"event_id":event_id}
     )
   except Exception as e:
+    print(e,"errorrrrrrrrrrrrrrrr")
     logger.error("Error in fill_form: %s", e, exc_info=True)
     messages.error(request, "An error occurred while filling the form. Please try again.")
     return render(request, 'errors/error.html')
@@ -597,33 +603,44 @@ def callback(request):
 
 
 
-
 def event_overview(request):
-  
+    try:
+        # 1. Start with a base queryset for all events, ordered as you like.
+        events_queryset = Event.objects.all().order_by('-date')
 
-  try:
-    ordered_agendas_queryset = AgendaItem.objects.order_by('order')
+        # 2. Get the search query from the URL. It's good practice to strip whitespace.
+        search_query = request.GET.get('q', '').strip()
+        
+        # 3. If a search query exists, filter the *existing* queryset.
+        if search_query:
+            # This modifies the events_queryset to be a filtered list.
+            # If there's no query, this block is skipped, and the queryset remains unfiltered.
+            events_queryset = events_queryset.filter(name__icontains=search_query)
 
-    events = Event.objects.all().prefetch_related(
+        # 4. Now, apply prefetching to the final queryset (which is either all events or the filtered ones).
+        # This is more efficient as you're only prefetching for the events you'll actually display.
+        ordered_agendas_queryset = AgendaItem.objects.order_by('order')
+        final_events = events_queryset.prefetch_related(
             Prefetch('agenda_items', queryset=ordered_agendas_queryset),
             'beverages'
         )
-    # Annotate each event with agendas and beverages
-    
-    context = {
-        'events': events,
-        'now': timezone.now(),  # for registration deadline check
-    }
 
-   
+        # 5. Build the context with the single, correct queryset.
+        # It's also helpful to pass the search query back to the template.
+        context = {
+            'events': final_events,
+            'now': timezone.now(),
+            'search_query': search_query, # Useful for showing "Results for '...'" or pre-filling the search box
+        }
+        
+        return render(request, "events/event_overview.html", context)
 
-    
-    return render(request, "events/event_overview.html", context)
-  except Exception as e:
-     print(e,"error in line 568")
-     logger.error(f"Error in event_overview: {e}", exc_info=True)
-     messages.error(request, "An error occurred while loading the event overview. Please try again.")
-     return render(request, 'errors/error.html',)
+    except Exception as e:
+        # Your error handling is good.
+        logger.error(f"Error in event_overview: {e}", exc_info=True)
+        messages.error(request, "An error occurred while loading the event overview. Please try again.")
+        return render(request, 'errors/error.html')
+
 
 def list_event_registertion(request):
     try:
@@ -634,13 +651,50 @@ def list_event_registertion(request):
         messages.error(request, "An error occurred while loading the registrations. Please try again.")
         return render(request, 'errors/error.html',)
 
+
+
+
+
 def register_event(request, event_id):
-    try:
-        event = get_object_or_404(Event, id=event_id)
-        current_year = datetime.now().year
-        forms = event.form_definitions.all()
-        user_submissions = FormSubmission.objects.filter(
-            form__in=forms,
+ try:
+    event = get_object_or_404(Event, id=event_id)
+
+    # --- Step 2: Handle all exit conditions first (Guard Clauses) ---
+
+    # Exit if registration is closed
+    if event.registration_deadline and timezone.now() > event.registration_deadline:
+        return render(request, 'events/registration_closed.html', {'event': event})
+
+    # Exit if user is not logged in (redirect to login)
+    if not request.user.is_authenticated:
+        post_login_redirect_url = reverse('register_event', kwargs={'event_id': event.id})
+        google_login_url = reverse('social:begin', args=['google-oauth2'])
+        params = urlencode({'next': post_login_redirect_url})
+        google_login_url_with_next = f'{google_login_url}?{params}'
+        
+        context = {
+            "event": event,
+            "google_login_url": google_login_url_with_next,
+        }
+        return render(request, "events/registered_user.html", context)
+
+    # From here, the user is authenticated.
+    user = request.user
+
+    # Exit if user is ALREADY registered for this event
+    if EventRegistration.objects.filter(event=event, user=user).exists():
+        messages.info(request, "You are already registered for this event.")
+        return render(request, "events/already_registered.html", {"event": event})
+
+    # --- Step 3: Main Logic for Authenticated, Unregistered Users ---
+
+    # Try to find the user's existing Student profile
+    student = Student.objects.filter(personal_email_id=user.email).first()
+    year_choices = list(range(datetime.now().year, 2000, -1))
+    print(year_choices,"linr no 638")# e.g. 2025 → 2001
+    forms_sub = event.form_definitions.all()
+    user_submissions = FormSubmission.objects.filter(
+            form__in=forms_sub,
             submitted_by=request.user
         ).values(
             'form_id' # Group by form
@@ -649,151 +703,72 @@ def register_event(request, event_id):
         )
 
         # Create a dictionary for easy lookup: {form_id: count}
-        submission_counts = {item['form_id']: item['submission_count'] for item in user_submissions}
-       
+    submission_counts = {item['form_id']: item['submission_count'] for item in user_submissions}
 
-        # Step 1: Registration deadline check
-        if event.registration_deadline and timezone.now() > event.registration_deadline:
-            return render(request, 'events/registration_closed.html', {'event': event})
+    if request.method == 'POST':
+        form = StudentRegistrationForm(request.POST, instance=student)
 
-        # Step 2: If user NOT authenticated → show SIGNUP
-        if not request.user.is_authenticated:
-            post_login_redirect_url = reverse('register_event', kwargs={'event_id': event.id})
-            google_login_url = reverse('social:begin', args=['google-oauth2'])
-            params = urlencode({'next': post_login_redirect_url})
-            google_login_url_with_next = f'{google_login_url}?{params}'
+        if form.is_valid():
+            student_instance = form.save(commit=False)
             
-            # Since the user is not logged in, we can't show a form.
-            # We render the page with the event info and the special login URL.
-            return render(request, "events/registered_user.html", {
-                "event": event,
-                "google_login_url": google_login_url_with_next,
+            # --- DATA CLEANUP LOGIC ---
+            new_status = student_instance.current_status
+            
+            if new_status != 'private':
+                student_instance.organization = None
+                student_instance.designation = None
+                student_instance.joining_date = None
+                student_instance.current_location = ""
+
+            if new_status != 'business':
+                student_instance.business_org_name = None
+                student_instance.business_designation = None
+                student_instance.business_type = None
+                student_instance.company_type = None
+                student_instance.business_location = None
+                student_instance.website = None
+
+            if new_status != 'education':
+                student_instance.degree_program = None
+                student_instance.institution = None
+                student_instance.education_location = None
+
+            if new_status != 'others':
+                student_instance.other_status_details = ""
+
+            student_instance.save()
+            
+            EventRegistration.objects.create(event=event, user=user)
+            send_registration_email(user.id, event.id)
+            
+            messages.success(request, f"✅ You have successfully registered for {event.name}!")
+            return render(request, "events/already_registered.html", {"event": event})
+        
+        else:
+            logger.warning(f"Registration form errors for user {user.email}: {form.errors.as_json()}")
+            messages.error(request, "⚠️ Please correct the errors in the form below.")
+    
+    else:  # This is a GET request
+        if student:
+            form = StudentRegistrationForm(instance=student)
+        else:
+            form = StudentRegistrationForm(initial={
+                'f_name': user.first_name,
+                'l_name': user.last_name,
+                'personal_email_id': user.email,
             })
 
-            
-        
-
-        # Step 3: User is authenticated → check Student profile
-        user = request.user
-        student = Student.objects.filter(personal_email_id=user.email).first()
-        year_choices = list(range(datetime.now().year, 2000, -1))
-        print(year_choices,"linr no 638")# e.g. 2025 → 2001
-
-        if not student:
-            if request.method == "POST":
-                print("entered post llline no 644")
-
-                student_form = StudentRegistrationForm(request.POST)
-                if student_form.is_valid():
-                    student = student_form.save(commit=False)
-                    student.f_name = request.POST.get("f_name")
-                    student.lname = request.POST.get("lname")
-                    student.personal_email_id = request.POST.get("personal_email_id")
-                    student.currrent_status = request.POST.get("current_status")
-                    student.organization = request.POST.get("organization")
-                    student.designation = request.POST.get("designation")
-                    student.current_location = request.POST.get("location")
-                    student.joining_date = request.POST.get("joining_date") or None
-                   
-                    student.business_type = request.POST.get("business_type")
-                    student.company_type = request.POST.get("company_type")
-                    student.business_org_name = request.POST.get("organization_name")
-                    student.business_designation = request.POST.get("designation")
-                    student.business_location = request.POST.get("business_location")
-                    student.website = request.POST.get("website")
-    
-    # Education fields
-                    student.degree_program = request.POST.get("degree_program")
-                    student.institution = request.POST.get("institution")
-                    student.education_location = request.POST.get("education_location")
-    
-    # Others fields
-                    student.other_status_details = request.POST.get("other_details")
-                    student.save()
-                    
-                    EventRegistration.objects.get_or_create(event=event, user=user)
-                    send_registration_email(user.id, event.id )
-                    messages.success(request, "✅ Registered successfully!")
-                    return render(request, "events/already_registered.html", {"event": event})
-            else:
-                
-                student_form = StudentRegistrationForm(initial={
-                    "f_name": user.first_name,
-                    "l_name": user.last_name,
-                    "personal_email_id": user.email,
-                  
-                })
-
-                return render(request, "events/registered_user.html", {
-                    "event": event,
-                    "years": year_choices,
-                    "form": student_form,
-                })
-
-        # Step 4: If student exists → event registration
-        if request.method == "POST":
-            print("entered post")
-            form = StudentRegistrationForm(request.POST, instance=student)
-            print(form,"linenoe72`")
-            if form.is_valid():
-                    student = form.save(commit=False)
-                    
-                    student.f_name = request.POST.get("f_name")
-                    student.lname = request.POST.get("lname")
-                    student.personal_email_id = request.POST.get("personal_email_id")
-                    student.currrent_status = request.POST.get("current_status")
-                    student.organization = request.POST.get("organization")
-                    student.designation = request.POST.get("designation")
-                    student.current_location = request.POST.get("location")
-                    student.joining_date = request.POST.get("joining_date") or None
-                    
-                    student.business_type = request.POST.get("business_type")
-                    student.company_type = request.POST.get("company_type")
-                    student.business_org_name = request.POST.get("organization_name")
-                    student.business_designation = request.POST.get("designation")
-                    student.business_location = request.POST.get("business_location")
-                    student.website = request.POST.get("website")
-    
-                    student.degree_program = request.POST.get("degree_program")
-                    student.institution = request.POST.get("institution")
-                    student.education_location = request.POST.get("education_location")
- 
-                    student.other_status_details = request.POST.get("other_details")
-                    student.save()
-                
-                    print("student saved")
-                    EventRegistration.objects.get_or_create(event=event, user=user)
-                    send_registration_email(user.id, event.id )
-                    messages.success(request, "✅ Successfully registered!")
-                    return render(request, "events/already_registered.html", {"event": event})
-            else:
-                   print(form.errors,"line no 678")
-                   messages.error(request, "⚠️ Please correct the errors below.")
-        else:
-            
-            form = StudentRegistrationForm(instance=student)
-
-        # Already registered?
-        if EventRegistration.objects.filter(event=event, user=user).exists():
-            return render(request, "events/already_registered.html", {"event": event})
-
-         # Render registration form
-
-        return render(request, "events/registered_user.html", {
-            "event": event,
-            "form": form,
-            "years": year_choices,
-            "student": student,
-        })
-
-    except Exception as e:
-        print("error:", str(e))
-        print(e,"line 680")
-        print(e,"error in line 681")
-        logger.error(f"Error in register_event view (event_id={event_id}): {e}", exc_info=True)
-        messages.error(request, "⚠️ Something went wrong while processing your registration. Please try again later.")
-        return render(request, "errors/error.html", {"error": str(e)})
-
+    context = {
+        'event': event,
+        'form': form,
+        'student': student,
+        'forms_sub':forms_sub
+    }
+    return render(request, "events/registered_user.html", context)
+ except Exception as e:
+     print("error:", str(e))
+     print(e,"line 680")
+     return render(request, "errors/error.html", {"error": str(e)})
 @user_passes_test(is_user)
 def already_registered_view(request):
     user = request.user

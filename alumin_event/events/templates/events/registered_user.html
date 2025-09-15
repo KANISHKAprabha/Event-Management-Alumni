@@ -2,8 +2,8 @@
 {% load static %}
 
 {% block title %}Event Registration{% endblock %}
-{# Messages are shown to everyone #}
 
+{% block hero_full_width %}
 {# This hero section is visible to EVERYONE, logged in or not #}
 <div class="event-hero">
     {% if event.image %}
@@ -11,7 +11,7 @@
     {% endif %}
     <div class="event-hero-overlay"></div>
     <div class="container text-center text-white event-hero-content">
-        <h1 class="display-4 fw-bold">{{ event.name }}</h1>
+        <h1 class="display-4 fw-bold" style="color:white">{{ event.name }}</h1>
         <p class="lead"><i class="bi bi-calendar3 me-2"></i>{{ event.date|date:"F j, Y, g:i A" }}</p>
         <div id="countdown" class="d-flex justify-content-center gap-3 gap-md-4 mt-4" data-event-date="{{ event.date|date:'Y-m-d\TH:i:s' }}">
             <div class="time-box"><span id="days">00</span><small>Days</small></div>
@@ -24,18 +24,15 @@
 {% endblock %}
 
 {% block content %}
-{# MOVED HERE: Messages are now inside the content block and will be displayed #}
-<div class="container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
-
+{# Messages are shown to everyone #}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 
 {# Agenda is shown to everyone #}
 {% if event.agenda_items.exists %}
@@ -127,14 +124,14 @@
             <div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Organization</label><input type="text" class="form-control" name="organization" value="{{ form.organization.value|default:'' }}"></div>
                 <div class="col-md-6"><label class="form-label">Designation</label><input type="text" class="form-control" name="designation" value="{{ form.designation.value|default:'' }}"></div>
-                <div class="col-md-6"><label class="form-label">Location</label><input type="text" class="form-control" name="location" value="{{ form.current_location.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input type="text" class="form-control" name="current_location" value="{{ form.current_location.value|default:'' }}"></div>
                 <div class="col-md-6"><label class="form-label">Joining Date</label><input type="date" name="joining_date" class="form-control" value="{{ form.joining_date.value|date:'Y-m-d' }}"></div>
             </div>
         </div>
         <div id="business_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
             <h6 class="fw-bold mb-3">Business Details</h6>
             <div class="row g-3">
-                 <div class="col-md-6"><label class="form-label">Organization Name</label><input type="text" class="form-control" name="organization_name" value="{{ form.business_org_name.value|default:'' }}"></div>
+                 <div class="col-md-6"><label class="form-label">Organization Name</label><input type="text" class="form-control" name="business_org_name" value="{{ form.business_org_name.value|default:'' }}"></div>
                  <div class="col-md-6"><label class="form-label">Designation</label><input type="text" class="form-control" name="business_designation" value="{{ form.business_designation.value|default:'' }}"></div>
                  <div class="col-md-6"><label class="form-label">Business Type</label><select class="form-select" name="business_type"><option value="">--Select--</option><option value="manufacturing" {% if form.business_type.value == "manufacturing" %}selected{% endif %}>Manufacturing</option><option value="services" {% if form.business_type.value == "services" %}selected{% endif %}>Services</option><option value="other">Other</option></select></div>
                  <div class="col-md-6"><label class="form-label">Company Type</label><select class="form-select" name="company_type"><option value="">--Select--</option><option value="proprietorship" {% if form.company_type.value == "proprietorship" %}selected{% endif %}>Proprietorship</option><option value="partnership" {% if form.company_type.value == "partnership" %}selected{% endif %}>Partnership</option><option value="other">Other</option></select></div>
@@ -153,7 +150,7 @@
         <div id="others_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
             <h6 class="fw-bold mb-3">Other Details</h6>
             <div class="row g-3">
-                <div class="col-12"><label class="form-label">Please provide details here</label><textarea class="form-control" name="other_details" rows="4">{{ form.other_status_details.value|default:'' }}</textarea></div>
+                <div class="col-12"><label class="form-label">Please provide details here</label><textarea class="form-control" name="other_status_details" rows="4">{{ form.other_status_details.value|default:'' }}</textarea></div>
             </div>
         </div>
 

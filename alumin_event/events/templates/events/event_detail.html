@@ -54,35 +54,7 @@
   {% endif %}
 </div>
 
-<!-- Beverages Section -->
-<div class="card p-4 shadow-sm mb-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 text-primary mb-0">🥤 Beverages</h2>
-    {% if user.is_superuser %}
-      <a href="{% url 'beverage_create' event.pk %}" class="btn btn-sm btn-primary">+ Add New Beverage</a>
-    {% endif %}
-  </div>
 
-  {% if event.beverages_list %}
-    <ul class="list-group">
-      {% for bev in event.beverages_list %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          {{ bev.name }} ({{ bev.quantity }}) {% if bev.notes %}- <em>{{ bev.notes }}</em>{% endif %}
-        </div>
-        {% if user.is_superuser %}
-        <div class="d-flex gap-1">
-          <a href="{% url 'beverage_update' bev.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
-          <a href="{% url 'beverage_delete' bev.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
-        </div>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-muted fst-italic">No beverages yet.</p>
-  {% endif %}
-</div>
 
 <!-- Dynamic Forms Section -->
 <div class="card p-4 shadow-sm mb-4">

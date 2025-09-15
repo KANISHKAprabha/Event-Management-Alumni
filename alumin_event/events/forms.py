@@ -374,6 +374,8 @@ class StudentRegistrationForm(forms.ModelForm):
             "joining_date",
             "business_org_name",
             "business_designation",
+            "business_type",
+            "company_type",
             "business_location",
             "website",
             "degree_program",

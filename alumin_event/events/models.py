@@ -243,9 +243,9 @@ class Student(models.Model):
     # Education / Placement
     batch = models.CharField(max_length=20, null=False, blank=False, default="N/A")
     department = models.CharField(max_length=100, null=False, blank=False, default="N/A")
-    current_location = models.CharField(max_length=200, null=False, blank=False, default="N/A")
+    current_location = models.CharField(max_length=200, null=True, blank=True, default="N/A")
     current_company = models.CharField(max_length=200, null=False, blank=False, default="N/A")
-    designation = models.CharField(max_length=100, null=False, blank=False, default="N/A")
+    designation = models.CharField(max_length=100, null=True, blank=True, default="N/A")
     position = models.CharField(max_length=100, null=False, blank=False, default="N/A")  # if different from designation
     job_domain = models.CharField(max_length=100, null=False, blank=False, default="N/A")
     current_status = models.CharField(
@@ -254,7 +254,7 @@ class Student(models.Model):
 
     # --- Private Organization ---
     organization = models.CharField(max_length=200, blank=True, null=True)
-    designation = models.CharField(max_length=100, blank=True, null=True)
+    # designation = models.CharField(max_length=100, blank=True, null=True)
     joining_date = models.DateField(blank=True, null=True)
 
     # --- Business ---
@@ -271,7 +271,7 @@ class Student(models.Model):
     education_location = models.CharField(max_length=200, blank=True, null=True)
 
     # --- Others ---
-    other_status_details = RichTextField(blank=True, null=True)
+    other_status_details = models.TextField(blank=True, null=True)
     
     # Contact info
     phone_number = models.CharField(max_length=15, null=False, blank=False, default="0000000000")

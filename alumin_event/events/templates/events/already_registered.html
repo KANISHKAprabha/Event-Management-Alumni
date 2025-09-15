@@ -1,17 +1,21 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Already Registered{% endblock %}
+
 {% block extra_css %}
 <style>
     .event-hero {
         position: relative;
         width: 100%;
-        height: 40vh; /* Adjust height as needed */
+        height: 45vh; /* Increased height slightly for better impact */
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         color: white;
+        /* Added a fallback gradient in case the image doesn't load */
+        background: linear-gradient(45deg, #2a2a2a, #1a1a1a);
     }
     .event-hero-img {
         position: absolute;
@@ -19,8 +23,11 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover; /* This is key to making the image cover the area nicely */
+        object-fit: cover;
         z-index: 1;
+        /* Added filter to improve text readability and aesthetics */
+        filter: brightness(0.7) blur(2px);
+        transform: scale(1.05); /* Slightly zooms the image to hide blurry edges */
     }
     .event-hero-overlay {
         position: absolute;
@@ -28,7 +35,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Dark overlay for text readability */
+        background-color: rgba(0, 0, 0, 0.4); /* Adjusted overlay */
         z-index: 2;
     }
     .event-hero-content {
@@ -36,10 +43,11 @@
         z-index: 3;
     }
     .time-box {
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.25);
         padding: 10px 20px;
         border-radius: 5px;
         border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px); /* Adds a nice frosted glass effect */
     }
     .time-box span {
         font-size: 2.5rem;
@@ -54,27 +62,19 @@
     }
 </style>
 {% endblock %}
-{# MOVED HERE: Messages are now inside the content block and will be displayed #}
-<div class="container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
+
 
 {% block hero_full_width %}
-{# This hero section is visible to EVERYONE, logged in or not #}
 <div class="event-hero">
     {% if event.image %}
         <img src="{{ event.image.url }}" alt="{{ event.name }}" class="event-hero-img">
+    {% else %}
+        <img src="{% static 'images/default_event_hero.jpg' %}" alt="Default Event Image" class="event-hero-img">
     {% endif %}
+
     <div class="event-hero-overlay"></div>
     <div class="container text-center event-hero-content">
-        <h1 class="display-4 fw-bold">{{ event.name }}</h1>
+        <h1 class="display-4 fw-bold" style="color:white">{{ event.name }}</h1>
         <p class="lead"><i class="bi bi-calendar3 me-2"></i>{{ event.date|date:"F j, Y, g:i A" }}</p>
         <div id="countdown" class="d-flex justify-content-center gap-3 gap-md-4 mt-4" data-event-date="{{ event.date|date:'Y-m-d\TH:i:s' }}">
             <div class="time-box"><span id="days">00</span><small>Days</small></div>
@@ -86,25 +86,30 @@
 </div>
 {% endblock %}
 
-{% block title %}Already Registered{% endblock %}
-{% if messages %}
+
+{% block content %}
+
+{# CORRECT PLACEMENT FOR MESSAGES #}
+<div class="container mb-4">
+    {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
                 {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
+</div>
 
-{% block content %}
 <div class="text-center">
     <i class="bi bi-patch-check-fill text-success" style="font-size: 4rem;"></i>
-    <h1 class="mt-3">Already Registered</h1>
+    <h1 class="mt-3" style="color:black">Already Registered</h1>
     <p class="lead text-muted">You are already registered for the event below. No further action is needed.</p>
 
     <hr class="my-4">
 
-    <h4 class="text-secondary mb-2">Event Name:</h4>
-    <h2 class="fw-bold mb-4">{{ event.name }}</h2>
+    <h4 class="text-secondary mb-2" style="color:rgb(241, 237, 237)">Event Name:</h4>
+    <h2 class="fw-bold mb-4" style="color:black">{{ event.name }}</h2>
     
     {% if event.about %}
     <div class="card bg-light p-3 mb-4 text-start">
@@ -158,26 +163,17 @@
                 <i class="bi bi-file-earmark-text me-2"></i>{{ form.name }}
             </div>
 
-
-{% if user.is_authenticated and form.user_submission_count >= form.max_submissions_per_user %}
-    
-    {# ---- DISABLED STATE ---- #}
-    {# The user has reached the submission limit. Show a disabled button/span. #}
-    <span class="btn btn-sm btn-outline-secondary disabled mt-2 mt-md-0" 
-          data-bs-toggle="tooltip" 
-          title="You have reached the submission limit for this form">
-        <i class="bi bi-check-circle-fill me-1"></i> Completed
-    </span>
-
-{% else %}
-
-    {# ---- ACTIVE STATE ---- #}
-    {# The user can still submit. Show the active "Fill Form" link. #}
-    <a href="{% url 'fill_form' form.id %}" class="btn btn-sm btn-outline-primary mt-2 mt-md-0">
-        <i class="bi bi-pencil-square me-1"></i> Fill Form
-    </a>
-
-{% endif %}
+            {% if forms_sub.user_submission_count >= form.max_submissions_per_user %}
+                <span class="btn btn-sm btn-outline-secondary disabled mt-2 mt-md-0" 
+                      data-bs-toggle="tooltip" 
+                      title="You have reached the submission limit for this form">
+                    <i class="bi bi-check-circle-fill me-1"></i> Completed
+                </span>
+            {% else %}
+                <a href="{% url 'fill_form' form.id %}" class="btn btn-sm btn-outline-primary mt-2 mt-md-0">
+                    <i class="bi bi-pencil-square me-1"></i> Fill Form
+                </a>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -198,7 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const countdownEl = document.getElementById("countdown");
     if (countdownEl) {
         const countDownDate = new Date(countdownEl.dataset.eventDate).getTime();
-
         const countdownInterval = setInterval(function() {
             const now = new Date().getTime();
             const distance = countDownDate - now;
@@ -209,17 +204,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Time calculations
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            const days = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+            const hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+            const minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            const seconds = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
 
-            // Update HTML elements
-            document.getElementById("days").innerText = String(days).padStart(2, '0');
-            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
-            document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
-            document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+            document.getElementById("days").innerText = days;
+            document.getElementById("hours").innerText = hours;
+            document.getElementById("minutes").innerText = minutes;
+            document.getElementById("seconds").innerText = seconds;
         }, 1000);
     }
 });
