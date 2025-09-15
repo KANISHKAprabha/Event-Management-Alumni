@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'index.html' %}
 {% block title %}Event Overview - Alumni Event Management{% endblock %}
 {% if request.user.is_admin}
 
@@ -20,45 +20,35 @@
         <div class="d-flex flex-column h-100">
           <!-- Event Info -->
           <h3 class="mb-2">
-            <a href="{% url 'event_detail' event.pk %}">{{ event.name }}</a>
+            <p >{{ event.name }}</p>
           </h3>
-          <p class="mb-1"><strong>Date:</strong> {{ event.date|date:"F j, Y g:i A" }}</p>
-          <p class="mb-1"><strong>Type:</strong> {{ event.get_event_type_display }}</p>
-          <p class="mb-2">
-          
-            <strong>Location:</strong> 
-            {% if event.location_type == 'offline' %}
-              📍 {{ event.physical_address|default:"TBD" }}
-            {% else %}
-            {% if request.user.is_authenticated %}
-              🌐 <a href="{{ event.online_link }}" target="_blank">Join Online</a>
-            {% else %}
-              🌐 <p>Event Registeration is required to Access the link </p>
-              {% endif %}
-              
-            {% endif %}
-          </p>
+       
+  <div class="card">
+    {% if event.image %}
+      <img src="{{ event.image.url }}" alt="{{ event.name }}">
+    {% endif %}
+ 
+  </div>
+
+
 
           <!-- Registration Status -->
-          <div class="p-2 rounded mb-3" style="background: rgba(102, 126, 234, 0.08);">
-            {% if event.registration_deadline > now %}
-              <p class="text-success fw-bold mb-1">✅ Registration Open</p>
-              <a href="{% url 'register_event' event.id %}" class="btn btn-primary btn-sm">Register Now</a>
-            {% else %}
-              <p class="text-danger fw-bold mb-1">❌ Registration Closed</p>
-            {% endif %}
-          </div>
+         <div class="p-2 rounded mb-3 d-flex flex-column align-items-center justify-content-center" 
+     style="background: rgba(102, 126, 234, 0.08); min-height: 80px;">
+    {% if event.registration_deadline > now %}
+        <p class="text-success fw-bold mb-2 text-center">✅ Registration Open</p>
+        <a href="{% url 'register_event' event.id %}" class="btn btn-primary btn-sm">View Now</a>
+    {% else %}
+        <p class="text-danger fw-bold mb-0 text-center">❌ Registration Closed</p>
+    {% endif %}
+</div>
 
           {% if user.is_superuser %}
           <a href="{% url 'event_detail' event.pk %}" class="card-link mb-2">View Full Details →</a>
           {% endif %}
 
           <!-- Bottom Button -->
-          <div class="mt-auto">
-            <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-primary w-100">
-              View agenda and forms →
-            </a>
-          </div>
+          
         </div>
       </div>
     </div>

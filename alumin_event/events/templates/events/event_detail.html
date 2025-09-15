@@ -15,7 +15,12 @@
   <div class="d-flex gap-2 mb-3">
     <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary btn-sm">← Back to Overview</a>
   </div>
+{% else %}
+  <div class="d-flex gap-2 mb-3">
+    <a href="{% url 'event_list' %}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+  </div>
 {% endif %}
+
 </div>
 
 <!-- Agenda Section -->

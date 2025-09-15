@@ -2,64 +2,312 @@
 {% load static %}
 
 {% block title %}Event Registration{% endblock %}
+{# Messages are shown to everyone #}
 
-{% block content %}
-<div class="container mt-5 d-flex justify-content-center">
-    <div class="card shadow-sm p-4" style="max-width: 600px; width: 100%;">
-
-        <!-- Success message -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <h2 class="mb-4 text-center">{{ event.name }}</h2>
-
-        {% if student_exists %}
-            <p class="text-center text-success mb-4">
-                Your information was prefilled from your student profile. You can update it if needed.
-            </p>
-        {% endif %}
-
-        <form method="post" class="row g-3">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
-            
-            <div class="col-12">
-                {{ form.f_name.label_tag }}
-                {{ form.f_name }}
-                {{ form.f_name.errors }}
-            </div>
-            <div class="col-12">
-                {{ form.lname.label_tag }}
-                {{ form.lname }}
-                {{ form.lname.errors }}
-            </div>
-
-            <div class="col-12">
-                {{ form.personal_email_id.label_tag }}
-                {{ form.personal_email_id }}
-                {{ form.personal_email_id.errors }}
-            </div>
-
-            <div class="col-12">
-                {{ form.position.label_tag }}
-                {{ form.position }}
-                {{ form.position.errors }}
-            </div>
-
-            <div class="col-12 text-center mt-3">
-                <button type="submit" class="btn btn-primary w-100">Register for Event</button>
-            </div>
-        </form>
-
-        <a href="{% url 'event_overview' %}" class="btn btn-link mt-3 w-100 text-center">
-            ← Back to Events
-        </a>
+{# This hero section is visible to EVERYONE, logged in or not #}
+<div class="event-hero">
+    {% if event.image %}
+        <img src="{{ event.image.url }}" alt="{{ event.name }}" class="event-hero-img">
+    {% endif %}
+    <div class="event-hero-overlay"></div>
+    <div class="container text-center text-white event-hero-content">
+        <h1 class="display-4 fw-bold">{{ event.name }}</h1>
+        <p class="lead"><i class="bi bi-calendar3 me-2"></i>{{ event.date|date:"F j, Y, g:i A" }}</p>
+        <div id="countdown" class="d-flex justify-content-center gap-3 gap-md-4 mt-4" data-event-date="{{ event.date|date:'Y-m-d\TH:i:s' }}">
+            <div class="time-box"><span id="days">00</span><small>Days</small></div>
+            <div class="time-box"><span id="hours">00</span><small>Hours</small></div>
+            <div class="time-box"><span id="minutes">00</span><small>Minutes</small></div>
+            <div class="time-box"><span id="seconds">00</span><small>Seconds</small></div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block content %}
+{# MOVED HERE: Messages are now inside the content block and will be displayed #}
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+
+{# Agenda is shown to everyone #}
+{% if event.agenda_items.exists %}
+<div class="mb-5">
+    <h4 class="fw-bold mb-3 text-center">Event Agenda</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr class="text-center">
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Time</th>
+                    <th>Speaker</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in event.agenda_items.all %}
+                <tr>
+                    <td class="fw-medium">{{ item.title }}</td>
+                    <td>{{ item.description|default:'-'|safe }}</td>
+                    <td class="text-nowrap text-center">
+                        {% if item.start_time %}{{ item.start_time|date:"g:i A" }}{% endif %}
+                        {% if item.end_time %} - {{ item.end_time|date:"g:i A" }}{% endif %}
+                    </td>
+                    <td class="text-center">{{ item.speaker|default:'-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+
+{# --- CONDITIONAL CONTENT --- #}
+
+{% if user.is_authenticated %}
+
+    {# USER IS LOGGED IN: Show the full registration form #}
+    <h2 class="mb-4 text-center fw-bold">Register for: {{ event.name }}</h2>
+
+    {% if student %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle-fill me-2"></i>Your information is pre-filled. You can update it below.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <fieldset>
+            <legend class="h4 fw-bold border-bottom pb-2 mb-4">Your Information</legend>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="f_name" class="form-label">First Name</label>
+                    <input type="text" id="f_name" name="f_name" class="form-control" value="{{ form.f_name.value|default:user.first_name }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="lname" class="form-label">Last Name</label>
+                    <input type="text" id="lname" name="lname" class="form-control" value="{{ form.l_name.value|default:user.last_name }}" required>
+                </div>
+                <div class="col-12">
+                    <label for="personal_email_id" class="form-label">Email Address</label>
+                    <input type="email" id="personal_email_id" name="personal_email_id" class="form-control" value="{{ form.personal_email_id.value|default:user.email }}" required>
+                </div>
+            </div>
+        </fieldset>
+
+        <hr class="my-5">
+
+        <fieldset>
+            <legend class="h4 fw-bold border-bottom pb-2 mb-4">Current Professional Status</legend>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="current_status" class="form-label">Select Your Status</label>
+                    <select class="form-select" name="current_status" id="current_status" required>
+                        <option value="" selected disabled>-- Please Select --</option>
+                        <option value="private" {% if form.current_status.value == "private" %}selected{% endif %}>Working in Private Company</option>
+                        <option value="business" {% if form.current_status.value == "business" %}selected{% endif %}>Business / Entrepreneur</option>
+                        <option value="education" {% if form.current_status.value == "education" %}selected{% endif %}>Pursuing Higher Education</option>
+                        <option value="others" {% if form.current_status.value == "others" %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+
+        <div id="private_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
+            <h6 class="fw-bold mb-3">Company Details</h6>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Organization</label><input type="text" class="form-control" name="organization" value="{{ form.organization.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Designation</label><input type="text" class="form-control" name="designation" value="{{ form.designation.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input type="text" class="form-control" name="location" value="{{ form.current_location.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Joining Date</label><input type="date" name="joining_date" class="form-control" value="{{ form.joining_date.value|date:'Y-m-d' }}"></div>
+            </div>
+        </div>
+        <div id="business_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
+            <h6 class="fw-bold mb-3">Business Details</h6>
+            <div class="row g-3">
+                 <div class="col-md-6"><label class="form-label">Organization Name</label><input type="text" class="form-control" name="organization_name" value="{{ form.business_org_name.value|default:'' }}"></div>
+                 <div class="col-md-6"><label class="form-label">Designation</label><input type="text" class="form-control" name="business_designation" value="{{ form.business_designation.value|default:'' }}"></div>
+                 <div class="col-md-6"><label class="form-label">Business Type</label><select class="form-select" name="business_type"><option value="">--Select--</option><option value="manufacturing" {% if form.business_type.value == "manufacturing" %}selected{% endif %}>Manufacturing</option><option value="services" {% if form.business_type.value == "services" %}selected{% endif %}>Services</option><option value="other">Other</option></select></div>
+                 <div class="col-md-6"><label class="form-label">Company Type</label><select class="form-select" name="company_type"><option value="">--Select--</option><option value="proprietorship" {% if form.company_type.value == "proprietorship" %}selected{% endif %}>Proprietorship</option><option value="partnership" {% if form.company_type.value == "partnership" %}selected{% endif %}>Partnership</option><option value="other">Other</option></select></div>
+                 <div class="col-md-6"><label class="form-label">Location</label><input type="text" class="form-control" name="business_location" value="{{ form.business_location.value|default:'' }}"></div>
+                 <div class="col-md-6"><label class="form-label">Website</label><input type="url" class="form-control" name="website" value="{{ form.website.value|default:'' }}"></div>
+            </div>
+        </div>
+        <div id="education_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
+            <h6 class="fw-bold mb-3">Higher Education Details</h6>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Degree/Program</label><input type="text" class="form-control" name="degree_program" value="{{ form.degree_program.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Institution</label><input type="text" class="form-control" name="institution" value="{{ form.institution.value|default:'' }}"></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input type="text" class="form-control" name="education_location" value="{{ form.education_location.value|default:'' }}"></div>
+            </div>
+        </div>
+        <div id="others_fields" class="status-fields mt-4 p-3 bg-light border rounded-3 d-none">
+            <h6 class="fw-bold mb-3">Other Details</h6>
+            <div class="row g-3">
+                <div class="col-12"><label class="form-label">Please provide details here</label><textarea class="form-control" name="other_details" rows="4">{{ form.other_status_details.value|default:'' }}</textarea></div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 mt-5">
+            <button type="submit" class="btn btn-primary btn-lg">Register for Event</button>
+            <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary">← Back to Events</a>
+        </div>
+    </form>
+
+{% else %}
+
+    {# USER IS NOT LOGGED IN: Show the floating login container #}
+    <div class="login-prompt-container">
+        <div class="card shadow-lg p-4 p-md-5 text-center">
+            <h3 class="fw-bold mb-3">Join the Event</h3>
+            <p class="text-muted mb-4">Please sign in with your Google account to continue your registration.</p>
+            <a href="{{ google_login_url }}" class="btn btn-google btn-lg">
+                <i class="bi bi-google me-2"></i>
+                Sign in with Google
+            </a>
+        </div>
+    </div>
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+.event-hero {
+    position: relative;
+    height: 40vh; /* 40% of the viewport height */
+    min-height: 350px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.event-hero-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+}
+.event-hero-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: -1;
+}
+.event-hero-content {
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+#countdown .time-box {
+    padding: 10px 15px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+    transition: transform 0.3s, background 0.3s;
+    line-height: 1.2;
+}
+#countdown .time-box span {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+#countdown .time-box:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.2);
+}
+
+{# NEW styles for the login container #}
+.login-prompt-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+}
+.login-prompt-container .card {
+    max-width: 500px;
+    width: 100%;
+    border: none;
+}
+.btn-google {
+    background-color: #4285F4;
+    color: white;
+    transition: background-color 0.3s;
+}
+.btn-google:hover {
+    background-color: #357ae8;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ---- SCRIPT FOR DYNAMIC FORM FIELDS ----
+    const statusSelect = document.getElementById("current_status");
+    const allStatusFields = document.querySelectorAll(".status-fields");
+
+    function updateFields() {
+        const selectedValue = statusSelect.value;
+        allStatusFields.forEach(fieldDiv => {
+            if (fieldDiv.id === selectedValue + '_fields') {
+                fieldDiv.classList.remove("d-none");
+            } else {
+                fieldDiv.classList.add("d-none");
+            }
+        });
+    }
+
+    if (statusSelect) {
+        statusSelect.addEventListener("change", updateFields);
+        // Run on page load to show pre-filled data correctly
+        // This makes sure the correct section is visible if the form is pre-populated
+        updateFields(); 
+    }
+
+    // ---- SCRIPT FOR COUNTDOWN TIMER ----
+    const countdownEl = document.getElementById("countdown");
+    if (countdownEl) {
+        const countDownDate = new Date(countdownEl.dataset.eventDate).getTime();
+
+        const countdownInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = countDownDate - now;
+
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                countdownEl.innerHTML = "<h4 class='fw-bold'>This event has already started!</h4>";
+                return;
+            }
+            
+            // Time calculations
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Update HTML elements
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+        }, 1000);
+    }
+});
+</script>
 {% endblock %}

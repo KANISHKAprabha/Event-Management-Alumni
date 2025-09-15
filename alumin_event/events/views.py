@@ -1,4 +1,8 @@
+from datetime import datetime
+from urllib.parse import urlencode
 import json
+from django.forms import modelformset_factory
+from django.db.models import Count
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.db import transaction
 from .tasks import *
@@ -160,11 +164,15 @@ def event_detail(request, pk):
 def event_create(request):
  try:
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST,request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "✅ Event created successfully!")
             return redirect('event_list')
+        else:
+            print(form.errors.as_json())
+            
+            messages.error(request, "⚠️ Please correct the errors below.")
     else:
         form = EventForm()
     return render(request, 'events/event_form.html', {'form': form})
@@ -403,6 +411,14 @@ def fill_form(request, form_id):
   try:
     form_def = get_object_or_404(FormDefinition, id=form_id)
     DynamicFormClass = generate_dynamic_form(form_def)
+    existing_count = FormSubmission.objects.filter(
+            form=form_def, submitted_by=request.user
+        ).count()
+    remaining_submissions = max(0, form_def.max_submissions_per_user - existing_count)
+    if remaining_submissions == 0:
+            messages.warning(request, "You have reached the submission limit for this form.")
+            return redirect("register_event", event_id=form_def.event_name.id)
+ 
 
     if request.method == "POST":
         form = DynamicFormClass(request.POST, request.FILES)
@@ -478,7 +494,7 @@ def fill_form(request, form_id):
     return render(
         request,
         "forms/fill_form.html",
-        {"form_def": form_def, "form": form}
+        {"form_def": form_def, "form": form,"remaining_submissions": remaining_submissions}
     )
   except Exception as e:
     logger.error("Error in fill_form: %s", e, exc_info=True)
@@ -609,11 +625,32 @@ def event_overview(request):
      messages.error(request, "An error occurred while loading the event overview. Please try again.")
      return render(request, 'errors/error.html',)
 
-
+def list_event_registertion(request):
+    try:
+        registrations = EventRegistration.objects.select_related("event", "user").all()
+        return render(request, "events/event_registeration_list.html", {"registrations": registrations})
+    except Exception as e:
+        logger.error(f"Error in list_event_registertion: {e}", exc_info=True)
+        messages.error(request, "An error occurred while loading the registrations. Please try again.")
+        return render(request, 'errors/error.html',)
 
 def register_event(request, event_id):
     try:
         event = get_object_or_404(Event, id=event_id)
+        current_year = datetime.now().year
+        forms = event.form_definitions.all()
+        user_submissions = FormSubmission.objects.filter(
+            form__in=forms,
+            submitted_by=request.user
+        ).values(
+            'form_id' # Group by form
+        ).annotate(
+            submission_count=Count('id') # Count submissions for each form
+        )
+
+        # Create a dictionary for easy lookup: {form_id: count}
+        submission_counts = {item['form_id']: item['submission_count'] for item in user_submissions}
+       
 
         # Step 1: Registration deadline check
         if event.registration_deadline and timezone.now() > event.registration_deadline:
@@ -621,84 +658,131 @@ def register_event(request, event_id):
 
         # Step 2: If user NOT authenticated → show SIGNUP
         if not request.user.is_authenticated:
+            post_login_redirect_url = reverse('register_event', kwargs={'event_id': event.id})
+            google_login_url = reverse('social:begin', args=['google-oauth2'])
+            params = urlencode({'next': post_login_redirect_url})
+            google_login_url_with_next = f'{google_login_url}?{params}'
             
-            if request.method == 'POST':
-                form = CustomSignupForm(request.POST)
-                if form.is_valid():
-                    # Create user
-                    user = form.save(commit=False)
-                    user.first_name = form.cleaned_data['first_name']
-                    user.last_name = form.cleaned_data['last_name']
-                    user.email = form.cleaned_data['email']
-                    user.save()
-                    existing_user= User.objects.get(email=user.email)
-                    
-                    # Add to group
-                    try:
-                        user.groups.add(Group.objects.get(name='User'))
-                    except Group.DoesNotExist:
-                        logger.warning("Group 'User' does not exist. Skipping group assignment.")
-                    try:
-                # Social login (Google)
-                       social_backend = user.social_auth.get(provider='google-oauth2').get_backend()
-                       login(request, user, backend=social_backend)
-                    except Exception:
-                # Manual login (normal Django user)
-                      login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            # Since the user is not logged in, we can't show a form.
+            # We render the page with the event info and the special login URL.
+            return render(request, "events/registered_user.html", {
+                "event": event,
+                "google_login_url": google_login_url_with_next,
+            })
 
-                    # Auto-login
-                  
-
-                    # Redirect back to same event → continue flow
-                    return redirect('register_event', event_id=event.id)
-            else:
-                print("line no 626")
-                form = CustomSignupForm()
-
-            return render(request, "accounts/signup.html", {"form": form, "event": event})
+            
+        
 
         # Step 3: User is authenticated → check Student profile
         user = request.user
         student = Student.objects.filter(personal_email_id=user.email).first()
+        year_choices = list(range(datetime.now().year, 2000, -1))
+        print(year_choices,"linr no 638")# e.g. 2025 → 2001
 
         if not student:
             if request.method == "POST":
+                print("entered post llline no 644")
+
                 student_form = StudentRegistrationForm(request.POST)
                 if student_form.is_valid():
-                    student = student_form.save()
+                    student = student_form.save(commit=False)
+                    student.f_name = request.POST.get("f_name")
+                    student.lname = request.POST.get("lname")
+                    student.personal_email_id = request.POST.get("personal_email_id")
+                    student.currrent_status = request.POST.get("current_status")
+                    student.organization = request.POST.get("organization")
+                    student.designation = request.POST.get("designation")
+                    student.current_location = request.POST.get("location")
+                    student.joining_date = request.POST.get("joining_date") or None
+                   
+                    student.business_type = request.POST.get("business_type")
+                    student.company_type = request.POST.get("company_type")
+                    student.business_org_name = request.POST.get("organization_name")
+                    student.business_designation = request.POST.get("designation")
+                    student.business_location = request.POST.get("business_location")
+                    student.website = request.POST.get("website")
+    
+    # Education fields
+                    student.degree_program = request.POST.get("degree_program")
+                    student.institution = request.POST.get("institution")
+                    student.education_location = request.POST.get("education_location")
+    
+    # Others fields
+                    student.other_status_details = request.POST.get("other_details")
+                    student.save()
+                    
                     EventRegistration.objects.get_or_create(event=event, user=user)
+                    send_registration_email(user.id, event.id )
                     messages.success(request, "✅ Registered successfully!")
                     return render(request, "events/already_registered.html", {"event": event})
             else:
+                
                 student_form = StudentRegistrationForm(initial={
                     "f_name": user.first_name,
                     "l_name": user.last_name,
                     "personal_email_id": user.email,
+                  
                 })
 
-            return render(request, "events/registered_user.html", {
-                "event": event,
-                "form": student_form,
-            })
+                return render(request, "events/registered_user.html", {
+                    "event": event,
+                    "years": year_choices,
+                    "form": student_form,
+                })
 
         # Step 4: If student exists → event registration
         if request.method == "POST":
+            print("entered post")
             form = StudentRegistrationForm(request.POST, instance=student)
+            print(form,"linenoe72`")
             if form.is_valid():
-                student = form.save()
-                EventRegistration.objects.get_or_create(event=event, user=user)
-                messages.success(request, "✅ Successfully registered!")
-                return render(request, "events/already_registered.html", {"event": event})
+                    student = form.save(commit=False)
+                    
+                    student.f_name = request.POST.get("f_name")
+                    student.lname = request.POST.get("lname")
+                    student.personal_email_id = request.POST.get("personal_email_id")
+                    student.currrent_status = request.POST.get("current_status")
+                    student.organization = request.POST.get("organization")
+                    student.designation = request.POST.get("designation")
+                    student.current_location = request.POST.get("location")
+                    student.joining_date = request.POST.get("joining_date") or None
+                    
+                    student.business_type = request.POST.get("business_type")
+                    student.company_type = request.POST.get("company_type")
+                    student.business_org_name = request.POST.get("organization_name")
+                    student.business_designation = request.POST.get("designation")
+                    student.business_location = request.POST.get("business_location")
+                    student.website = request.POST.get("website")
+    
+                    student.degree_program = request.POST.get("degree_program")
+                    student.institution = request.POST.get("institution")
+                    student.education_location = request.POST.get("education_location")
+ 
+                    student.other_status_details = request.POST.get("other_details")
+                    student.save()
+                
+                    print("student saved")
+                    EventRegistration.objects.get_or_create(event=event, user=user)
+                    send_registration_email(user.id, event.id )
+                    messages.success(request, "✅ Successfully registered!")
+                    return render(request, "events/already_registered.html", {"event": event})
+            else:
+                   print(form.errors,"line no 678")
+                   messages.error(request, "⚠️ Please correct the errors below.")
         else:
+            
             form = StudentRegistrationForm(instance=student)
 
         # Already registered?
         if EventRegistration.objects.filter(event=event, user=user).exists():
             return render(request, "events/already_registered.html", {"event": event})
 
+         # Render registration form
+
         return render(request, "events/registered_user.html", {
             "event": event,
             "form": form,
+            "years": year_choices,
             "student": student,
         })
 
@@ -710,12 +794,21 @@ def register_event(request, event_id):
         messages.error(request, "⚠️ Something went wrong while processing your registration. Please try again later.")
         return render(request, "errors/error.html", {"error": str(e)})
 
+@user_passes_test(is_user)
+def already_registered_view(request):
+    user = request.user
+    # form_submission =
+    
+    # Pass any context if needed
+    context = {}
+    return render(request, 'events/already_registered.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 def event_list_view(request):
  try:
     events = Event.objects.all()
+    
     return render(request, "events/events_admin_list.html", {"events": events})
  except Exception as e:
      logger.error(f"Error in event_list_view: {e}", exc_info=True)
@@ -876,3 +969,26 @@ class StudentDeleteView(DeleteView):
     model = Student
     template_name = 'students/student_delete_confirm.html'
     success_url = reverse_lazy('student_list')
+    
+    
+    
+    
+def custom_404_view(request, exception):
+    """
+    Renders the 404.html template when a page is not found.
+    The 'exception' variable is passed by Django but we don't need to use it here.
+    """
+    return render(request, 'errors/404.html', status=404)
+
+def custom_500_view(request):
+    """
+    Renders the 500.html template for internal server errors.
+    """
+    return render(request, 'errors/500.html', status=500)
+
+
+
+def trigger_error_view(request):
+    # This will cause a ZeroDivisionError
+    result = 1 / 0
+    return render(request, 'some_template.html')

@@ -1,22 +1,70 @@
+{% extends 'base.html' %}
 {% load static %}
-<head><title>Add Field</title></head>
-<body>
-<h1>Add Fields to {{ form_def.name }}</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ field_form.as_p }}
-    <button type="submit">Add Field</button>
-</form>
 
-<h2>Current Fields:</h2>
-<ul>
-{% for field in form_def.fields.all %}
-    <li>{{ field.label }} ({{ field.get_field_type_display }})</li>
-{% empty %}
-    <li>No fields yet.</li>
-{% endfor %}
-</ul>
+{% block title %}Add Fields - {{ form_def.name }}{% endblock %}
 
-<a href="{% url 'fill_form' form_def.id %}">Preview Form</a>
-</body>
-</html>
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4 rounded-3" style="max-width: 750px; width: 100%;">
+        
+        <!-- Page Title -->
+        <h2 class="mb-3 text-center fw-bold">Add Fields to {{ form_def.name }}</h2>
+        
+        <!-- Add Field Form -->
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            
+            {% for field in field_form %}
+            <div class="col-12">
+                <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                
+                {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                
+                {% for error in field.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            <div class="col-12 d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                    Add Field
+                </button>
+                <a href="{% url 'fill_form' form_def.id %}" class="btn btn-secondary w-100 shadow-sm">
+                    Preview Form
+                </a>
+            </div>
+        </form>
+        
+        <!-- Current Fields -->
+        <h4 class="mt-5 fw-semibold">Current Fields</h4>
+        <ul class="list-group list-group-flush mt-2">
+            {% for field in form_def.fields.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ field.label }}
+                <span class="badge bg-secondary rounded-pill">{{ field.get_field_type_display }}</span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">No fields yet.</li>
+            {% endfor %}
+        </ul>
+
+    </div>
+</div>
+
+<!-- Optional: Styling for field inputs (similar to Fill Form) -->
+<style>
+    textarea.form-control {
+        min-height: 120px;
+        font-family: monospace;
+        background-color: #f9fafb;
+        resize: none;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+    }
+</style>
+{% endblock %}

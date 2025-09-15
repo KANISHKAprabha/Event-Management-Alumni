@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.forms import CharField
 from django.utils.translation import gettext_lazy as _
-
+from ckeditor.fields import RichTextField
 
 
 
@@ -33,6 +33,8 @@ class Event(models.Model):
     host = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     registration_deadline = models.DateTimeField(null=True, blank=True)
+    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
+    about = RichTextField(null=True)
 
     
 
@@ -53,7 +55,7 @@ class Event(models.Model):
 class AgendaItem(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='agenda_items')
     title = models.CharField(max_length=200)  # e.g., "Welcome Speech"
-    description = models.TextField(blank=True, null=True)
+    description = RichTextField(blank=True, null=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True,blank=True)
     speaker = models.CharField(max_length=100, blank=True, null=True)
@@ -71,7 +73,7 @@ class Beverage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='beverages')
     name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(default=0)  # optional, track stock
-    notes = models.TextField(blank=True, null=True)  # optional
+    notes = RichTextField(blank=True, null=True)  # optional
 
     def __str__(self):
         return f"{self.name} ({self.event.name})"
@@ -95,11 +97,13 @@ FIELD_TYPES = [
 class FormDefinition(models.Model):
     name = models.CharField(max_length=255)
     event_name = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='form_definitions',null =True, blank=True)
-    description = models.TextField(blank=True)
-
+    description = RichTextField(blank=True)
+   
     # Payment settings
     requires_payment = models.BooleanField(default=False)
     payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    max_submissions_per_user = models.PositiveIntegerField(default=1)
+    
 
     def __str__(self):
         return self.name
@@ -192,13 +196,20 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment of {self.amount} by {self.user.username} - {self.status}"
     
-    
+ 
     
     
     
 
 
 class Student(models.Model):
+    STATUS_CHOICES = [
+        ("private", "Working in private organization"),
+        ("business", "Business/Entrepreneur"),
+        ("education", "Pursuing Higher Education"),
+        ("others", "Others"),
+    ]
+    
     # Basic student info
     university_register_number = models.CharField(max_length=50,  null=False, blank=False, default="UNKNOWN")
     roll_no = models.CharField(max_length=50,  null=False, blank=False, default="UNKNOWN")
@@ -237,6 +248,30 @@ class Student(models.Model):
     designation = models.CharField(max_length=100, null=False, blank=False, default="N/A")
     position = models.CharField(max_length=100, null=False, blank=False, default="N/A")  # if different from designation
     job_domain = models.CharField(max_length=100, null=False, blank=False, default="N/A")
+    current_status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="other"
+    )
+
+    # --- Private Organization ---
+    organization = models.CharField(max_length=200, blank=True, null=True)
+    designation = models.CharField(max_length=100, blank=True, null=True)
+    joining_date = models.DateField(blank=True, null=True)
+
+    # --- Business ---
+    business_type = models.CharField(max_length=50, blank=True, null=True)
+    company_type = models.CharField(max_length=50, blank=True, null=True)
+    business_org_name = models.CharField(max_length=200, blank=True, null=True)
+    business_designation = models.CharField(max_length=100, blank=True, null=True)
+    business_location = models.CharField(max_length=200, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+
+    # --- Higher Education ---
+    degree_program = models.CharField(max_length=200, blank=True, null=True)
+    institution = models.CharField(max_length=200, blank=True, null=True)
+    education_location = models.CharField(max_length=200, blank=True, null=True)
+
+    # --- Others ---
+    other_status_details = RichTextField(blank=True, null=True)
     
     # Contact info
     phone_number = models.CharField(max_length=15, null=False, blank=False, default="0000000000")

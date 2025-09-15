@@ -1,20 +1,40 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Delete Form{% endblock %}
+{% block title %}Confirm Deletion{% endblock %}
 
 {% block content %}
-<div class="container my-4">
+<div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card p-4 shadow-sm mb-4">
-                <h1 class="mb-3 text-danger">⚠️ Delete Form</h1>
-                <p>Are you sure you want to delete <strong>{{ form_def.name }}</strong>? This action cannot be undone.</p>
-                <form method="post">
+        <div class="col-12 col-md-8 col-lg-7">
+            <div class="card p-4 p-md-5 shadow text-center">
+                
+                <div class="mb-4">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+                </div>
+
+                <h1 class="fw-bold mb-3">Confirm Deletion</h1>
+                
+                <p class="lead text-muted">
+                    Are you sure you want to permanently delete the form:
+                </p>
+                
+                <h3 class="fw-bold mb-4">"{{ form_def.name }}"</h3>
+
+                <p>This action cannot be undone. All associated data will be lost forever.</p>
+
+                <form method="post" class="mt-4">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                    <a href="{% url 'event_list' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <button type="submit" class="btn btn-danger btn-lg px-4">
+                            <i class="bi bi-trash-fill me-2"></i>Yes, Delete Permanently
+                        </button>
+                        <a href="{% url 'event_list' %}" class="btn btn-outline-secondary btn-lg px-4">
+                            Cancel
+                        </a>
+                    </div>
                 </form>
+
             </div>
         </div>
     </div>

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Event Registrations{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">📋 Event Registrations</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if registrations %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Event</th>
+                        <th>Registered At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ reg.user.username }}</td>
+                        <td>{{ reg.event.name }}</td>
+                        <td>{{ reg.created_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No registrations found.</p>
+    {% endif %}
+
+    <a hreflang="en" href="{% url 'event_list' %}" 
+   class="btn btn-secondary btn-lg w-100 ">
+   ⬅ Back
+</a>
+</div>
+{% endblock %}

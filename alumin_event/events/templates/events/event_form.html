@@ -1,36 +1,147 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Create Event Form{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Event{% else %}Create Event{% endif %}{% endblock %}
+
+{% block extra_head %}
+    {# Loads CSS/JS needed for widgets like date pickers #}
+    {{ form.media }}
+    {{ agenda_formset.media }}
+{% endblock %}
 
 {% block content %}
-<div class="card p-4 shadow-sm">
-    <h1 class="mb-3">📝 Create Event Form</h1>
-    <p class="text-muted mb-4">Fill in the form details below to create a dynamic form for an event.</p>
-
-    <form id="create-form" method="post">
-        {% csrf_token %}
-
-        <!-- Render form fields -->
-        <div class="mb-3">
-            {{ form.as_p }}
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" id="submit-btn" class="btn btn-primary">
-            Save Form
-        </button>
-        <!-- Optional back button -->
-        <a href="{% url 'event_list' %}" class="btn btn-outline-secondary ms-2">← Back to Events</a>
-    </form>
+<div class="text-center">
+    <h2 class="fw-bold">{% if form.instance.pk %}📝 Edit Event{% else %}✨ Create a New Event{% endif %}</h2>
+    <p class="text-muted mb-4">
+        {% if form.instance.pk %}Update the event details below.{% else %}Fill in the details to create a new event for alumni.{% endif %}
+    </p>
 </div>
 
-<!-- Prevent multiple submissions -->
+<form id="event-form" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors or agenda_formset.non_form_errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ form.non_field_errors }}
+            {{ agenda_formset.non_form_errors }}
+        </div>
+    {% endif %}
+
+    <fieldset class="mb-4">
+        <legend class="h5 fw-bold border-bottom pb-2 mb-4">Event Details</legend>
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                {{ form.name }}
+                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.event_type.id_for_label }}" class="form-label">{{ form.event_type.label }}</label>
+                {{ form.event_type }}
+                <div class="text-danger small mt-1">{{ form.event_type.errors }}</div>
+            </div>
+            <div class="col-12">
+                <label for="{{ form.about.id_for_label }}" class="form-label">{{ form.about.label }}</label>
+                {{ form.about }}
+                 <div class="text-danger small mt-1">{{ form.about.errors }}</div>
+            </div>
+            <div class="col-md-6">
+                <label for="{{ form.host.id_for_label }}" class="form-label">{{ form.host.label }}</label>
+                {{ form.host }}
+                <div class="text-danger small mt-1">{{ form.host.errors }}</div>
+            </div>
+            <div class="col-md-6">
+                <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                {{ form.image }}
+                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-4">
+        <legend class="h5 fw-bold border-bottom pb-2 mb-4">Location</legend>
+        <div class="row g-3">
+            <div class="col-12">
+                <label for="{{ form.location_type.id_for_label }}" class="form-label">{{ form.location_type.label }}</label>
+                {{ form.location_type }}
+                <div class="text-danger small mt-1">{{ form.location_type.errors }}</div>
+            </div>
+            <div class="col-12" id="physical_address_container" style="display: none;">
+                <label for="{{ form.physical_address.id_for_label }}" class="form-label">{{ form.physical_address.label }}</label>
+                {{ form.physical_address }}
+                <div class="text-danger small mt-1">{{ form.physical_address.errors }}</div>
+            </div>
+            <div class="col-12" id="online_link_container" style="display: none;">
+                <label for="{{ form.online_link.id_for_label }}" class="form-label">{{ form.online_link.label }}</label>
+                {{ form.online_link }}
+                <div class="text-danger small mt-1">{{ form.online_link.errors }}</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-4">
+        <legend class="h5 fw-bold border-bottom pb-2 mb-4">Scheduling & Registration</legend>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                {{ form.date }}
+                <div class="text-danger small mt-1">{{ form.date.errors }}</div>
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.event_end_date.id_for_label }}" class="form-label">{{ form.event_end_date.label }}</label>
+                {{ form.event_end_date }}
+                <div class="text-danger small mt-1">{{ form.event_end_date.errors }}</div>
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.registration_deadline.id_for_label }}" class="form-label">{{ form.registration_deadline.label }}</label>
+                {{ form.registration_deadline }}
+                <div class="text-danger small mt-1">{{ form.registration_deadline.errors }}</div>
+            </div>
+        </div>
+    </fieldset>
+    
+    <hr class="my-5">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" id="submit-btn" class="btn btn-primary px-4">
+            <i class="bi bi-check-circle-fill me-2"></i>{% if form.instance.pk %}Save Changes{% else %}Create Event{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.getElementById("create-form").addEventListener("submit", function() {
-        let btn = document.getElementById("submit-btn");
-        btn.disabled = true;
-        btn.innerText = "Submitting...";
+document.addEventListener("DOMContentLoaded", function() {
+    // --- 1. DYNAMIC LOCATION FIELDS ---
+    const locationTypeSelect = document.getElementById("id_location_type");
+    const physicalAddressContainer = document.getElementById("physical_address_container");
+    const onlineLinkContainer = document.getElementById("online_link_container");
+
+    // THIS FUNCTION CONTAINS THE UPDATED LOGIC
+    function toggleLocationFields() {
+        if (!locationTypeSelect) return;
+        const selectedType = locationTypeSelect.value;
+
+        // Show Physical Address if type is 'offline' OR 'hybrid'
+        physicalAddressContainer.style.display = (selectedType === 'offline' || selectedType === 'hybrid') ? 'block' : 'none';
+
+        // Show Online Link if type is 'online' OR 'hybrid'
+        onlineLinkContainer.style.display = (selectedType === 'online' || selectedType === 'hybrid') ? 'block' : 'none';
+    }
+    
+    // Run the function when the page loads to set the initial state
+    toggleLocationFields(); 
+    // Add an event listener to run the function whenever the dropdown value changes
+    locationTypeSelect.addEventListener('change', toggleLocationFields);
+
+    // --- 2. SUBMIT BUTTON STATE ---
+    const eventForm = document.getElementById('event-form');
+    eventForm.addEventListener("submit", function() {
+        const submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
     });
+});
 </script>
 {% endblock %}

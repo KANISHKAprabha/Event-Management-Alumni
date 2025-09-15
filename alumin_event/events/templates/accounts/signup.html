@@ -4,75 +4,124 @@
 {% block title %}Sign Up{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card border-0 shadow-lg p-4 p-md-5">
-                <h2 class="mb-4 text-center fw-bold text-primary">📝 Create Your Account</h2>
-                
-                <form method="post" novalidate>
-                    {% csrf_token %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
 
-                    <!-- Display Non-Field Errors -->
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger" role="alert">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+        <h2 class="mb-4 text-center fw-bold">📝 Create Your Account</h2>
 
-                    <!-- Renders all fields consistently, including passwords -->
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
-                        {{ field }} <!-- This renders the input with the 'form-control' class from forms.py -->
-                        
-                        {% if field.help_text %}
-                            <div class="form-text small text-muted">{{ field.help_text|safe }}</div>
-                        {% endif %}
-
-                        {% for error in field.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
+        <form method="post" id="signup-form" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
                     {% endfor %}
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Sign Up</button>
-                    <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary w-100 mt-3">Back</a>
-
-                </form>
-
-                <!-- Divider -->
-                <div class="d-flex align-items-center my-4">
-                    <hr class="flex-grow-1">
-                    <span class="mx-3 text-muted small">OR</span>
-                    <hr class="flex-grow-1">
                 </div>
+            {% endif %}
 
-                <!-- Google login -->
-                <div class="text-center">
-                    <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-outline-secondary w-100">
-                        <!-- Google SVG Icon -->
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;">
-                            <path d="M19.3 10.21C19.3 9.53 19.24 8.86 19.12 8.21H10V12.05H15.3C15.08 13.31 14.31 14.38 13.2 15.11V17.58H16.11C18.01 15.89 19.3 13.26 19.3 10.21Z" fill="#4285F4"/>
-                            <path d="M10 19.5C12.7 19.5 15.01 18.6 16.71 17.1L13.78 14.9C12.89 15.53 11.58 15.93 10 15.93C7.38 15.93 5.16 14.28 4.31 11.97H1.28V14.45C2.98 17.58 6.22 19.5 10 19.5Z" fill="#34A853"/>
-                            <path d="M4.31 11.97C4.12 11.44 4.02 10.88 4.02 10.3C4.02 9.72 4.12 9.16 4.31 8.63V6.15H1.28C0.47 7.73 0 9.42 0 11.2C0 12.98 0.47 14.67 1.28 16.25L4.31 11.97Z" fill="#FBBC05"/>
-                            <path d="M10 4.67C11.33 4.67 12.44 5.14 13.22 5.88L16.17 3.09C14.44 1.5 12.22 0.5 10 0.5C6.22 0.5 2.98 2.42 1.28 5.55L4.31 7.93C5.16 5.62 7.38 4.07 10 4.07V4.67Z" fill="#EA4335"/>
-                        </svg>
-                        Sign Up with Google
-                    </a>
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
                 </div>
+            {% endfor %}
 
-                <!-- Link to login -->
-                <div class="text-center mt-4">
-                    <small class="text-muted">
-                        Already have an account? 
-                        <a href="{% if event %}{% url 'user_login' event_id=event.id %}{% else %}{% url 'event_overview' %}{% endif %}" class="text-decoration-none fw-bold">Login</a>
-                    </small>
-                </div>
-            </div>
+            <button type="submit" id="signup-btn" class="btn btn-primary btn-lg w-100 mt-3">
+                Sign Up
+            </button>
+        </form>
+
+        <div class="d-flex align-items-center my-4">
+            <hr class="flex-grow-1">
+            <span class="mx-3 text-muted small fw-bold">OR</span>
+            <hr class="flex-grow-1">
         </div>
+
+        <div class="text-center">
+            <a id="google-btn" href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}" 
+               class="btn btn-outline-secondary w-100">
+                <i class="fab fa-google me-2"></i>
+                Sign Up with Google
+            </a>
+        </div>
+
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                Already have an account? 
+                <a href="{% if event %}{% url 'user_login' event_id=event.id %}{% else %}{% url 'event_overview' %}{% endif %}" 
+                   class="text-decoration-none fw-bold">Login</a>
+            </small>
+        </div>
+
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ---- SCRIPT TO AUTOMATICALLY STYLE DJANGO FORM FIELDS ----
+    const signupForm = document.getElementById("signup-form");
+    if (signupForm) {
+        // Add 'form-control' to standard inputs
+        const inputs = signupForm.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="url"], textarea, select');
+        inputs.forEach(function(input) {
+            input.classList.add('form-control');
+        });
+
+        // Add 'form-check-input' to checkboxes
+        const checkboxes = signupForm.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.classList.add('form-check-input');
+            // Wrap checkbox and its label in a form-check div for proper alignment
+            if (checkbox.parentElement.tagName !== 'DIV' || !checkbox.parentElement.classList.contains('form-check')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-check';
+                checkbox.parentNode.insertBefore(wrapper, checkbox);
+                wrapper.appendChild(checkbox);
+                const label = signupForm.querySelector(`label[for="${checkbox.id}"]`);
+                if (label) {
+                    label.className = 'form-check-label';
+                    wrapper.appendChild(label);
+                }
+            }
+        });
+    }
+
+    // ---- YOUR ORIGINAL SCRIPT FOR BUTTON SUBMISSION ----
+    const form = document.getElementById("signup-form");
+    const signupBtn = document.getElementById("signup-btn");
+    const googleBtn = document.getElementById("google-btn");
+
+    // For normal signup form
+    if (form) {
+        form.addEventListener("submit", function() {
+            if(signupBtn) {
+                signupBtn.disabled = true;
+                signupBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing up...';
+            }
+        });
+    }
+
+    // For Google signup
+    if (googleBtn) {
+        googleBtn.addEventListener("click", function(event) {
+            if (googleBtn.dataset.clicked === "true") {
+                event.preventDefault(); // prevent second click
+            } else {
+                googleBtn.dataset.clicked = "true";
+                googleBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Redirecting...';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

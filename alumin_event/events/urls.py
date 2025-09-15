@@ -12,7 +12,7 @@ urlpatterns = [
     path('event/create/', views.event_create, name='event_create'),
     path('event/<int:pk>/update/', views.event_update, name='event_update'),
     path('event/<int:pk>/delete/', views.event_delete, name='event_delete'),
-
+     path('already-registered/', views.already_registered_view, name='already_registered'),
     path('overview/', views.event_overview, name='event_overview'),
     path('events/register/<int:event_id>/', views.register_event, name='register_event'),
     path('event/<int:event_pk>/agenda/create/', views.agenda_create, name='agenda_create'),
@@ -38,6 +38,9 @@ urlpatterns = [
     path('students/add/', views.StudentCreateView.as_view(), name='student_add'),
     path('students/<int:pk>/edit/', views.StudentUpdateView.as_view(), name='student_edit'),
     path('students/<int:pk>/delete/', views.StudentDeleteView.as_view(), name='student_delete'),
+    # Add this to urlpatterns for testing
+path('trigger-error/', views.trigger_error_view, name='trigger_error'),
+path('event_registrations/', views.list_event_registertion, name='student_registeration_list'),
 
     
 

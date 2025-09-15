@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .error-page-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 70vh; /* Adjust as needed */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        padding: 20px;
+    }
+
+    .error-code {
+        font-size: 10rem;
+        font-weight: 700;
+        color: #ac423c; /* A light grey */
+        text-shadow: 
+            -1px -1px 0 #adb5bd,  
+             1px -1px 0 #adb5bd,
+            -1px  1px 0 #adb5bd,
+             1px  1px 0 #adb5bd;
+    }
+
+    .error-page-container h1 {
+        font-size: 2.5rem;
+        margin-top: -2.5rem; /* Overlap with the 404 number */
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+
+    .error-page-container p {
+        font-size: 1.1rem;
+        color: #6c757d;
+        max-width: 500px;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-home {
+        display: inline-block;
+        padding: 12px 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-home:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="error-page-container">
+    <div class="error-code">500</div>
+    <p>We've encountered a technical problem. Our team has been automatically notified.</p>
+    <p>Please try again in a few moments.</p>
+    <a href="/" class="btn-home">Return to the Homepage</a>
+</div>
+{% endblock %}

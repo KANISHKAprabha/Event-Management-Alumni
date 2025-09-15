@@ -1,42 +1,120 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Create New Form{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Form{% else %}Create New Form{% endif %}{% endblock %}
+
+{% block extra_head %}
+    {# This is the correct place for form media, like the CKEditor scripts #}
+    {{ form.media }}
+{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card p-4 shadow-sm mb-4">
-                <h1 class="mb-3">📝 Create a New Form</h1>
-                <p class="text-muted mb-4">Fill in the form details below to create a dynamic form for an event.</p>
-
-                <form id="create-form" method="post">
-                    {% csrf_token %}
-
-                    <!-- Form fields -->
-                    <div class="mb-3">
-                        {{ form.as_p }}
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" id="submit-btn" class="btn btn-primary">
-                        Save Form
-                    </button>
-                    <!-- Back Button -->
-                    <a href="{% url 'dynamic_form_list' %}" class="btn btn-outline-secondary ms-2">← Back to Forms</a>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="text-center">
+    <h2 class="fw-bold">{% if form.instance.pk %}📝 Edit Form Definition{% else %}✨ Create a New Form{% endif %}</h2>
+    <p class="text-muted mb-4">Design a dynamic form to attach to your events.</p>
 </div>
 
-<!-- Prevent multiple submissions -->
+<form id="create-form" method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <fieldset class="mb-4">
+        <legend class="h5 fw-bold border-bottom pb-2 mb-4">Form Details</legend>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                {{ form.name }}
+                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+            </div>
+            <div class="col-md-6">
+                <label for="{{ form.event_name.id_for_label }}" class="form-label">{{ form.event_name.label }}</label>
+                {{ form.event_name }}
+                <div class="text-danger small mt-1">{{ form.event_name.errors }}</div>
+            </div>
+            <div class="col-12">
+                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                {{ form.description }}
+                <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend class="h5 fw-bold border-bottom pb-2 mb-4">Payment & Submissions</legend>
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="form-check form-switch mb-3">
+                    {{ form.requires_payment }}
+                    <label class="form-check-label" for="{{ form.requires_payment.id_for_label }}">
+                        {{ form.requires_payment.label }}
+                    </label>
+                    <div class="text-danger small mt-1">{{ form.requires_payment.errors }}</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6" id="payment-amount-container" style="display: none;">
+                <label for="{{ form.payment_amount.id_for_label }}" class="form-label">{{ form.payment_amount.label }}</label>
+                {{ form.payment_amount }}
+                <div class="text-danger small mt-1">{{ form.payment_amount.errors }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.max_submissions_per_user.id_for_label }}" class="form-label">{{ form.max_submissions_per_user.label }}</label>
+                {{ form.max_submissions_per_user }}
+                <div class="text-danger small mt-1">{{ form.max_submissions_per_user.errors }}</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <hr class="my-5">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{% url 'dynamic_form_list' %}" class="btn btn-outline-secondary">← Back to Forms</a>
+        <button type="submit" id="submit-btn" class="btn btn-primary px-4">
+            <i class="bi bi-check-circle-fill me-2"></i>{% if form.instance.pk %}Save Changes{% else %}Create Form{% endif %}
+        </button>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.getElementById("create-form").addEventListener("submit", function() {
-        let btn = document.getElementById("submit-btn");
-        btn.disabled = true;
-        btn.innerText = "Submitting...";
-    });
+document.addEventListener("DOMContentLoaded", function() {
+    // --- 1. DYNAMIC PAYMENT FIELD LOGIC ---
+    const requiresPaymentCheckbox = document.getElementById("id_requires_payment");
+    const paymentAmountContainer = document.getElementById("payment-amount-container");
+
+    function togglePaymentField() {
+        if (!requiresPaymentCheckbox || !paymentAmountContainer) return;
+
+        if (requiresPaymentCheckbox.checked) {
+            paymentAmountContainer.style.display = 'block';
+        } else {
+            paymentAmountContainer.style.display = 'none';
+        }
+    }
+    
+    // Run on page load for initial state (e.g., when editing)
+    togglePaymentField();
+
+    // Add event listener for changes
+    requiresPaymentCheckbox.addEventListener('change', togglePaymentField);
+
+
+    // --- 2. SUBMIT BUTTON STATE ---
+    const createForm = document.getElementById("create-form");
+    if (createForm) {
+        createForm.addEventListener("submit", function() {
+            let btn = document.getElementById("submit-btn");
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
+        });
+    }
+});
 </script>
 {% endblock %}

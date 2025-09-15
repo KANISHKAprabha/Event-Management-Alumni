@@ -11,6 +11,7 @@
         <a href="{% url 'event_list_admin' %}" class="btn btn-primary">View Event Submission</a>
         <a href="{% url 'create_form' %}" class="btn btn-outline-primary">+ Create Dynamic Form</a>
         <a href="{% url 'student_list' %}" class="btn btn-outline-primary">Manage Alumni Records</a>
+        <a href="{% url 'student_registeration_list' %}" class="btn btn-outline-primary">View Events Registerations</a>
     </div>
 
     <div class="card mb-4 p-4 shadow-sm">
@@ -21,7 +22,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <strong>{{ form.name }}</strong> - 
-                        <span class="text-muted">{{ form.description }}</span>
+                        <span class="text-muted">{{ form.description|safe }}</span>
                         <br>
                         <small>
                             Event: 
@@ -34,7 +35,7 @@
                     </div>
                     <div>
                         <a href="{% url 'fill_form' form.id %}" class="btn btn-sm btn-primary">Form Preview</a>
-                        <a href="{% url 'update_form' form.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'update_form' form.id %}" class="btn btn-sm btn-outline-primary">Edit Form Submission Count</a>
                         <a href="{% url 'delete_form' form.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
                     </div>
                 </li>
@@ -58,7 +59,7 @@
                         </div>
                         <div class="d-flex gap-1 flex-wrap">
                             <a href="{% url 'event_update' event.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a href="{% url 'event_delete' event.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            
                             <a href="{% url 'agenda_create' event.pk %}" class="btn btn-sm btn-primary">Add Agenda</a>
                         </div>
                     </div>
@@ -81,17 +82,7 @@
                         <p class="text-muted fst-italic ms-3 mt-2">No agenda items yet.</p>
                     {% endif %}
 
-                    {# CORRECTED: Use event.beverages.all to access the prefetched data #}
-                    {% if event.beverages.all %}
-                        <h6 class="mt-2 text-primary">Beverages</h6>
-                        <ul class="ms-3">
-                            {% for bev in event.beverages.all %}
-                            <li>{{ bev.name }} (Quantity: {{ bev.quantity }})</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted fst-italic ms-3 mt-2">No beverages yet.</p>
-                    {% endif %}
+                  
                 </li>
                 {% endfor %}
             </ul>

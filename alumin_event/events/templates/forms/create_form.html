@@ -4,35 +4,65 @@
 {% block title %}Create New Form{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card p-4 shadow-sm mb-4">
-                <h1 class="mb-3">📝 Create a New Form</h1>
-                <p class="text-muted mb-4">Fill in the form details below to create a dynamic form for an event.</p>
+<div class="container my-5 d-flex justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card p-5 border-0 mb-4">
+            <h1 class="mb-4 text-center">📝 Create a New Form</h1>
+            <p class="text-muted text-center mb-5">
+                Fill in the details below to create a dynamic form for an event.
+            </p>
 
-                <form id="create-form" method="post">
-                    {% csrf_token %}
+            <form id="create-form" method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
 
-                    <!-- Form fields -->
-                    <div class="mb-3">
-                        {{ form.as_p }}
-                    </div>
+                {% for field in form %}
+                <div class="mb-4 p-3 border rounded bg-white" id="field-{{ field.name }}">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold mb-2">
+                        {{ field.label }}
+                    </label>
 
-                    <!-- Submit Button -->
-                    <button type="submit" id="submit-btn" class="btn btn-primary">
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small class="form-text text-muted mt-1">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" id="submit-btn" class="btn btn-primary w-100">
                         Save Form
                     </button>
-                    <!-- Back Button -->
-                    <a href="{% url 'event_list' %}" class="btn btn-outline-secondary ms-2">← Back to Forms</a>
-                </form>
-            </div>
+                    <a href="{% url 'event_list' %}" class="btn btn-outline-secondary w-100">
+                        ← Back to Forms
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Prevent multiple submissions -->
+<!-- Show payment_amount only if requires_payment is checked -->
 <script>
+    const requiresPayment = document.getElementById("id_requires_payment");
+    const paymentField = document.getElementById("field-payment_amount");
+
+    function togglePaymentField() {
+        if (requiresPayment.checked) {
+            paymentField.style.display = "block";
+        } else {
+            paymentField.style.display = "none";
+        }
+    }
+
+    requiresPayment.addEventListener("change", togglePaymentField);
+    window.addEventListener("DOMContentLoaded", togglePaymentField);
+
+    // Prevent multiple submissions
     document.getElementById("create-form").addEventListener("submit", function() {
         let btn = document.getElementById("submit-btn");
         btn.disabled = true;
@@ -40,4 +70,3 @@
     });
 </script>
 {% endblock %}
-
