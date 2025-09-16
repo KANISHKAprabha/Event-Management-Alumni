@@ -96,7 +96,7 @@
                 </div>
                 <div class="col-12">
                     <label for="personal_email_id" class="form-label">Email Address</label>
-                    <input type="email" id="personal_email_id" name="personal_email_id" class="form-control" value="{{ form.personal_email_id.value|default:user.email }}" required>
+                    <input type="email" id="personal_email_id" name="personal_email_id" class="form-control" value="{{ form.personal_email_id.value|default:user.email }}" required readonly>
                 </div>
             </div>
         </fieldset>
@@ -155,7 +155,8 @@
         </div>
 
         <div class="d-grid gap-2 mt-5">
-            <button type="submit" class="btn btn-primary btn-lg">Register for Event</button>
+            {# MODIFIED: Added id="register-btn" #}
+            <button type="submit" id="register-btn" class="btn btn-primary btn-lg">Register for Event</button>
             <a href="{% url 'event_overview' %}" class="btn btn-outline-secondary">← Back to Events</a>
         </div>
     </form>
@@ -167,7 +168,8 @@
         <div class="card shadow-lg p-4 p-md-5 text-center">
             <h3 class="fw-bold mb-3">Join the Event</h3>
             <p class="text-muted mb-4">Please sign in with your Google account to continue your registration.</p>
-            <a href="{{ google_login_url }}" class="btn btn-google btn-lg">
+            {# MODIFIED: Added id="google-signin-btn" #}
+            <a href="{{ google_login_url }}" id="google-signin-btn" class="btn btn-google btn-lg">
                 <i class="bi bi-google me-2"></i>
                 Sign in with Google
             </a>
@@ -260,6 +262,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const allStatusFields = document.querySelectorAll(".status-fields");
 
     function updateFields() {
+        if (!statusSelect) return; // Guard clause if the element doesn't exist
         const selectedValue = statusSelect.value;
         allStatusFields.forEach(fieldDiv => {
             if (fieldDiv.id === selectedValue + '_fields') {
@@ -272,8 +275,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (statusSelect) {
         statusSelect.addEventListener("change", updateFields);
-        // Run on page load to show pre-filled data correctly
-        // This makes sure the correct section is visible if the form is pre-populated
         updateFields(); 
     }
 
@@ -292,18 +293,56 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
             
-            // Time calculations
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Update HTML elements
             document.getElementById("days").innerText = String(days).padStart(2, '0');
             document.getElementById("hours").innerText = String(hours).padStart(2, '0');
             document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
             document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
         }, 1000);
+    }
+
+    // ===================================================================
+    // ==== NEW SCRIPT FOR IDEMPOTENT BUTTONS (PREVENT MULTIPLE CLICKS) ====
+    // ===================================================================
+
+    // --- 1. Handle the "Register for Event" form submission ---
+    const registrationForm = document.querySelector('form');
+    const registerBtn = document.getElementById('register-btn');
+
+    if (registrationForm && registerBtn) {
+        registrationForm.addEventListener('submit', function() {
+            // This event fires when the form is submitted
+            
+            // Disable the button to prevent double-submission
+            registerBtn.disabled = true;
+
+            // Provide visual feedback to the user
+            registerBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Registering...
+            `;
+        });
+    }
+
+    // --- 2. Handle the "Sign in with Google" link click ---
+    const googleSignInBtn = document.getElementById('google-signin-btn');
+
+    if (googleSignInBtn) {
+        googleSignInBtn.addEventListener('click', function() {
+            // Disable the link visually and functionally
+            googleSignInBtn.classList.add('disabled'); // Bootstrap's disabled class
+            googleSignInBtn.setAttribute('aria-disabled', 'true');
+
+            // Provide visual feedback
+            googleSignInBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Redirecting...
+            `;
+        });
     }
 });
 </script>
